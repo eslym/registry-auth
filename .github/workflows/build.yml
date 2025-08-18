@@ -56,10 +56,12 @@ jobs:
           IMAGE="${{ github.repository }}:ci"
           SRC="/app"                         # folder inside the image
           OUT="registry-auth.tar.gz"
+          TMPDIR="$(mktemp -d)"
 
           cid="$(docker create "$IMAGE" sh -c 'echo ready' || docker create "$IMAGE" /bin/sh -c 'echo ready')"
-          docker cp "$cid:$SRC" - | gzip > "$OUT"
+          docker cp "$cid:$SRC/." "$TMPDIR/"
           docker rm "$cid"
+          tar -czf "$OUT" -C "$TMPDIR" .
           ls -lh "$OUT"
 
       - name: Upload Release Asset
