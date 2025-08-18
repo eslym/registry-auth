@@ -130,14 +130,15 @@ FROM base AS cleanup
 
 ADD . /app
 
-RUN rm -rf ./app/Providers/TelescopeServiceProvider.php &&\
+RUN cd /app &&\
+    rm -rf ./app/Providers/TelescopeServiceProvider.php &&\
     rm -rf ./config/telescope.php &&\
     rm -rf ./database/migrations/0001_01_01_000003_create_telescope_entries_table.php &&\
     rm -rf ./config/ide-helper.php &&\
     rm -rf ./resources/{js,css} &&\
     cp .env.example .env &&\
     find storage -type d -print > struct.txt &&\
-    chmod +x docker/* &&\
+    chmod +x docker/*
 
 # ========================================================== #
 #  Final Build Stage
