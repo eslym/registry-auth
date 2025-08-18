@@ -99,7 +99,7 @@ class TokenController extends Controller
                     foreach ($controls as $control) {
                         if (ACLGlob::match($control->repository, $grant->name)) {
                             $allowed = $control->access_level->toActions();
-                            $grant->actions = array_intersect($allowed, $grant->actions);
+                            $grant = $grant->restrictTo($allowed);
                             if (empty($grant->actions)) {
                                 return null;
                             }
