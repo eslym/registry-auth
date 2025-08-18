@@ -2,7 +2,8 @@
 	const levelLabels = {
 		denied: "Denied",
 		"pull-only": "Pull Only",
-		"pull-push": "Pull & Push"
+		"pull-push": "Pull & Push",
+		full: "Full Access"
 	};
 </script>
 
