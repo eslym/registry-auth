@@ -72,6 +72,7 @@ _ide_helper.php
 /.devcontainer
 /Dockerfile
 /stacker.yaml
+/compose-dev.yaml
 
 # Shadcn svelte
 /components.json

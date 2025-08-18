@@ -15,17 +15,17 @@ final class Token
 
         $payload = [
             'iss' => config('registry.issuer'),
-            'sub' => $sub,                                      // "" for anonymous is OK
+            'sub' => $sub,
             'aud' => $aud ?? config('registry.service'),
             'nbf' => $now,
             'iat' => $now,
             'exp' => $now + $ttl,
             'jti' => (string)Str::uuid(),
-            'access' => array_values($access),                     // [{type,name,actions:[...]}]
+            'access' => array_values($access),
         ];
 
         // Load private key (RSA or EC), with optional passphrase
-        $keyPath = config('registry.key.path', storage_path('registry_auth.key'));
+        $keyPath = config('registry.key.path', storage_path('registry.pem'));
         if (!is_readable($keyPath)) {
             throw new RuntimeException("Private key not readable: {$keyPath}");
         }
@@ -42,7 +42,7 @@ final class Token
 
         // Include x5c header so the registry can validate the token signer
         $headers = [];
-        $certPath = config('registry.key.cert', storage_path('registry_auth_ca.crt'));
+        $certPath = config('registry.key.cert', storage_path('registry.crt'));
         if (is_readable($certPath)) {
             $certPem = file_get_contents($certPath) ?: '';
             $der = trim(str_replace(
