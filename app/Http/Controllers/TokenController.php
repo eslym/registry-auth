@@ -103,8 +103,6 @@ class TokenController extends Controller
                     'detail' => $detail,
                 ]
             ]
-        ], 401, [
-            'WWW-Authenticate' => 'Basic realm="' . config('app.name') . '", charset="UTF-8"',
-        ]);
+        ], 401);
     }
 }
