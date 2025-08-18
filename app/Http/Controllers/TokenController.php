@@ -27,20 +27,32 @@ class TokenController extends Controller
                 ],
             ], 401);
         }
-        if (Auth::once([
-            'username' => $request->getUser(),
-            'password' => $request->getPassword(),
-        ])) {
-            $user = Auth::user();
-            if ($user->password_expired) {
+        if ($request->getUser()) {
+            $user = null;
+            if (Auth::once([
+                'username' => $request->getUser(),
+                'password' => $request->getPassword(),
+            ])) {
+                $user = Auth::user();
+                if ($user->password_expired) {
+                    return response()->json([
+                        'errors' => [
+                            [
+                                'code' => ErrorCode::UNAUTHORIZED,
+                                'message' => 'Password has expired, please change your password',
+                            ]
+                        ],
+                    ], 401);
+                }
+            } else {
                 return response()->json([
                     'errors' => [
                         [
-                            'code' => ErrorCode::DENIED,
-                            'message' => 'Password has expired, please change your password',
+                            'code' => ErrorCode::UNAUTHORIZED,
+                            'message' => 'Invalid username or password',
                         ]
                     ],
-                ], 403);
+                ], 401);
             }
         } else {
             $user = User::whereNull('username')->first();

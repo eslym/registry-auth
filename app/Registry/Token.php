@@ -19,7 +19,7 @@ class Token
             'access' => $access,
         ];
 
-        $key = file_get_contents(storage_path('registry_auth.key'));
+        $key = file_get_contents(config('registry.key.path'));
         $pass = config('registry.key.pass') ?: null;
 
         $token = JWT::encode(
