@@ -17,13 +17,13 @@ return [
 
     'paths' => ['api/*'],
 
-    'allowed_methods' => ['*'],
+    'allowed_methods' => ['GET'],
 
     'allowed_origins' => array_filter(explode(',', env('CORS_ALLOWED_ORIGINS', '*'))),
 
     'allowed_origins_patterns' => array_filter(explode(',', env('CORS_ALLOWED_ORIGINS_PATTERNS', ''))),
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => ['Accept', 'Accept-Encoding', 'Authorization', 'Content-Type', 'X-Requested-With'],
 
     'exposed_headers' => [],
 
