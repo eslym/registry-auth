@@ -87,7 +87,7 @@ class TokenController extends Controller
         return collect($scopes)->map(function ($scope) use ($user, $lazy) {
             if (empty($scope)) return null;
             $grant = Grant::parse($scope);
-            if ($scope === 'repository:catalog:*') {
+            if ($scope === 'registry:catalog:*') {
                 return $user->isAnonymous() && !config('registry.anonymous_catalog', false) ?
                     null : $grant;
             }
