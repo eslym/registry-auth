@@ -2,8 +2,6 @@ import { parentPort } from "node:worker_threads";
 import { createInertiaApp, type Page } from "@eslym/svelte5-inertia";
 //@ts-ignore
 import { resolvePage } from "@/pages";
-//@ts-ignore
-import { configContextKey } from "@/lib/config.svelte.js";
 // @ts-ignore
 import BaseLayout from "@/layouts/base.svelte";
 import { render } from "svelte/server";
@@ -17,11 +15,8 @@ parentPort!.on("message", async ({ id, page }: { id: string; page: Page }) => {
 				return render(App, {
 					props: {
 						...props,
-						wrap: BaseLayout
+						wrap: BaseLayout as any
 					},
-					context: new Map([
-						[configContextKey, (props.initialPage as any).config]
-					])
 				});
 			}
 		}))!;
