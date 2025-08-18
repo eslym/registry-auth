@@ -46,16 +46,6 @@ class TokenController extends Controller
         }
         try {
             $grants = $this->grant($user, explode(' ', $request->query->getString('scope')));
-            if ($grants->isEmpty()) {
-                return response()->json([
-                    'errors' => [
-                        [
-                            'code' => ErrorCode::UNAUTHORIZED,
-                            'message' => 'Insufficient permissions',
-                        ]
-                    ],
-                ]);
-            }
             return response()->json(Token::issue($user->username ?? '', $grants->all()));
         } catch (Throwable $e) {
             return response()->json([
