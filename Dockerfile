@@ -22,7 +22,7 @@ RUN apt update &&\
            ffmpeg \
            libzip-dev &&\
     docker-php-ext-configure pcntl --enable-pcntl &&\
-    docker-php-ext-install -j$(nproc) pdo_mysql zip pcntl opcache gd &&\
+    docker-php-ext-install -j$(nproc) pdo_mysql zip pcntl opcache &&\
     pecl install redis-${PHP_REDIS_VERSION} &&\
     docker-php-ext-enable redis &&\
     rm -rf /var/lib/apt/lists/* &&\
