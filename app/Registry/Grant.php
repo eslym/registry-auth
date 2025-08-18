@@ -13,7 +13,7 @@ class Grant implements JsonSerializable
 
     public function restrictTo(array $actions): static {
         $actions = array_filter($actions, fn ($action) => in_array($action, $this->actions));
-        return new static($this->type, $this->name, array_merge($this->actions, $actions));
+        return new static($this->type, $this->name, $actions);
     }
 
     public function jsonSerialize(): mixed
