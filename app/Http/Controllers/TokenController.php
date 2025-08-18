@@ -10,6 +10,7 @@ use App\Registry\ResourceType;
 use App\Registry\Token;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class TokenController extends Controller
@@ -48,6 +49,7 @@ class TokenController extends Controller
             $grants = $this->grant($user, explode(' ', $request->query->getString('scope')));
             return response()->json(Token::issue($user->username ?? '', $grants->all()));
         } catch (Throwable $e) {
+            Log::error($e);
             return response()->json([
                 'errors' => [
                     [
@@ -71,6 +73,7 @@ class TokenController extends Controller
         };
 
         return collect($scopes)->map(function ($scope) use ($user, $lazy) {
+            if (empty($scope)) return null;
             $grant = Grant::parse($scope);
             if ($scope === 'repository:catalog:*') {
                 return $user->isAnonymous() && !config('registry.anonymous_catalog', false) ?
