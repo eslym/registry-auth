@@ -18,41 +18,25 @@ class TokenController extends Controller
     public function issue(Request $request)
     {
         if ($request->query('service') !== config('registry.service')) {
-            return response()->json([
-                'errors' => [
-                    [
-                        'code' => ErrorCode::DENIED,
-                        'message' => 'Invalid service',
-                    ]
-                ],
-            ], 401);
+            return $this->failed(ErrorCode::DENIED, 'Invalid service');
         }
         if ($request->getUser()) {
-            $user = null;
             if (Auth::once([
                 'username' => $request->getUser(),
                 'password' => $request->getPassword(),
             ])) {
                 $user = Auth::user();
                 if ($user->password_expired) {
-                    return response()->json([
-                        'errors' => [
-                            [
-                                'code' => ErrorCode::UNAUTHORIZED,
-                                'message' => 'Password has expired, please change your password',
-                            ]
-                        ],
-                    ], 401);
+                    return $this->failed(
+                        ErrorCode::UNAUTHORIZED,
+                        'Password has expired, please change your password'
+                    );
                 }
             } else {
-                return response()->json([
-                    'errors' => [
-                        [
-                            'code' => ErrorCode::UNAUTHORIZED,
-                            'message' => 'Invalid username or password',
-                        ]
-                    ],
-                ], 401);
+                return $this->failed(
+                    ErrorCode::UNAUTHORIZED,
+                    'Invalid username or password'
+                );
             }
         } else {
             $user = User::whereNull('username')->first();
@@ -62,17 +46,13 @@ class TokenController extends Controller
             return response()->json(Token::issue($user->username ?? '', $grants->all()));
         } catch (Throwable $e) {
             Log::error($e);
-            return response()->json([
-                'errors' => [
-                    [
-                        'code' => ErrorCode::DENIED,
-                        'message' => config('app.debug') ?
-                            $e->getMessage() : 'Access denied',
-                        'detail' => config('app.debug') ?
-                            $e->getTraceAsString() : null,
-                    ]
-                ]
-            ], 401);
+            return $this->failed(
+                ErrorCode::DENIED,
+                config('app.debug') ?
+                    $e->getMessage() : 'Authentication Server Error',
+                config('app.debug') ?
+                    $e->getTraceAsString() : null,
+            );
         }
     }
 
@@ -111,5 +91,20 @@ class TokenController extends Controller
                     return null;
             }
         })->filter(fn($v) => $v);
+    }
+
+    public function failed(ErrorCode $code, string $message, mixed $detail = null)
+    {
+        return response()->json([
+            'errors' => [
+                [
+                    'code' => $code,
+                    'message' => $message,
+                    'detail' => $detail,
+                ]
+            ]
+        ], 401, [
+            'WWW-Authenticate' => 'Basic realm="' . config('app.name') . '", charset="UTF-8"',
+        ]);
     }
 }
