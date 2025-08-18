@@ -7,5 +7,6 @@ return [
     'key' => [
         'path' => env('REGISTRY_JWT_KEY_PATH', storage_path(env('REGISTRY_JWT_KEY_FILENAME', 'registry.pem'))),
         'pass' => env('REGISTRY_JWT_KEY_PASS'),
+        'cert' => env('REGISTRY_JWT_CERT_PATH', storage_path(env('REGISTRY_JWT_CERT_FILENAME', 'registry_ca.crt'))),
     ],
 ];

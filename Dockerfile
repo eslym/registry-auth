@@ -19,7 +19,6 @@ RUN apt update &&\
     apt -y install --no-install-recommends \
            curl \
            unzip \
-           ffmpeg \
            libzip-dev &&\
     docker-php-ext-configure pcntl --enable-pcntl &&\
     docker-php-ext-install -j$(nproc) pdo_mysql zip pcntl opcache &&\
