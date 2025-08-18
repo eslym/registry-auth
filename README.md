@@ -10,12 +10,11 @@ A simple registry authentication backend using token auth.
 
 ## Installation
 
-### Manual Installation
-
 > [!IMPORTANT]
 > This is just a quick start guide, all the code in this section is just example. Do not copy and run directly without
 > understanding it.
 
+### Manual Installation
 1. Clone the repository:
    ```bash
    git clone https://github.com/eslym/registry-auth.git
