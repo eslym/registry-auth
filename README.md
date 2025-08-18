@@ -2,6 +2,9 @@
 
 A simple registry authentication backend using token auth.
 
+> [!WARNING]
+> This project is still in early development stage, use at your own risk.
+
 ## Requirements
 
 - **PHP** 8.2 or higher
