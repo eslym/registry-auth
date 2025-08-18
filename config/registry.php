@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'anonymous_catalog' => (bool)env('REGISTRY_ANONYMOUS_CATALOG', false),
     'service' => env('REGISTRY_SERVICE', 'container_registry'),
     'issuer' => env('REGISTRY_ISSUER', 'registry_token_issuer'),
     'ttl' => (int)env('REGISTRY_TOKEN_TTL', 300),
