@@ -1,0 +1,23 @@
+{
+	"endOfLine": "lf",
+	"tabWidth": 4,
+	"useTabs": true,
+	"trailingComma": "none",
+	"plugins": ["prettier-plugin-svelte", "prettier-plugin-tailwindcss"],
+	"tailwindFunctions": ["cn", "clsx", "twMerge", "tv"],
+	"overrides": [
+		{
+			"files": "*.svelte",
+			"options": {
+				"parser": "svelte",
+				"plugins": ["prettier-plugin-svelte", "prettier-plugin-tailwindcss"]
+			}
+		},
+		{
+			"files": "*.{yml,yaml,json,prettierrc}",
+			"options": {
+				"tabWidth": 2
+			}
+		}
+	]
+}

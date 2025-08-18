@@ -1,0 +1,24 @@
+{
+	"name": "Registry Auth",
+	"dockerComposeFile": ["../compose-dev.yaml"],
+	"service": "app",
+	"workspaceFolder": "/home/eslym/registry-auth",
+	"runServices": ["db"],
+	"remoteUser": "eslym",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"1YiB.svelte-bundle",
+				"xdebug.php-debug",
+				"zobo.php-intellisense",
+				"laravel.vscode-laravel",
+				"lokalise.i18n-ally",
+				"esbenp.prettier-vscode",
+				"cweijan.vscode-mysql-client2",
+				"mhutchie.git-graph",
+				"github.vscode-github-actions",
+				"bradlc.vscode-tailwindcss"
+			]
+		}
+	}
+}

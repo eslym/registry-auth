@@ -1,0 +1,69 @@
+name: Build and Push Docker Image on Tag
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Extract Docker metadata (tags & labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/registry-auth
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          load: true
+          tags: ${{ github.repository }}:ci
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/registry-auth:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/registry-auth:buildcache,mode=max
+
+      - name: Push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Make archive from image
+        run: |
+          set -euo pipefail
+          IMAGE="${{ github.repository }}:ci"
+          SRC="/app"                         # folder inside the image
+          OUT="registry-auth.tar.gz"
+
+          cid="$(docker create "$IMAGE" sh -c 'echo ready' || docker create "$IMAGE" /bin/sh -c 'echo ready')"
+          docker cp "$cid:$SRC" - | gzip > "$OUT"
+          docker rm "$cid"
+          ls -lh "$OUT"
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: registry-auth.tar.gz

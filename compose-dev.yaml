@@ -1,0 +1,49 @@
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      target: devcontainer
+    depends_on: [db]
+    user: eslym
+    hostname: dev-container
+    command: bash -c "sleep infinity"
+    working_dir: /home/eslym/registry-auth
+    ports:
+      - "8000:8000"
+      - "5173:5173"
+    environment:
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: registry-auth
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      CACHE_STORE: redis
+      REDIS_HOST: redis
+    volumes:
+      - xdg_data:/home/eslym/.xdg
+      - jetbrains:/.jbdevcontainer
+      - ./:/home/eslym/registry-auth
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  db:
+    image: "mariadb:10"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: registry-auth
+    volumes:
+      - db_data:/var/lib/mysql
+  redis:
+    image: "redis:latest"
+    volumes:
+      - redis_data:/data
+volumes:
+  xdg_data:
+    driver: local
+  db_data:
+    driver: local
+  redis_data:
+    driver: local
+  jetbrains:
+    driver: local

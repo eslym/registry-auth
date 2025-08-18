@@ -1,0 +1,17 @@
+services:
+  web:
+    cmd: ["/app/docker/as-web.sh", "frankenphp", "run"]
+  ssr:
+    cmd:
+      [
+        "/usr/local/bin/bun",
+        "/app/bootstrap/ssr",
+        "-w",
+        "${INERTIA_SSR_WORKER_MIN:-1}",
+        "-W",
+        "${INERTIA_SSR_WORKER_MAX:-4}"
+      ]
+    cwd: /app
+  cron:
+    cmd: ["/app/docker/as-web.sh", "php", "artisan", "schedule:run"]
+    cron: "* * * * *"

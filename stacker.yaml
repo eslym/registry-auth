@@ -1,0 +1,8 @@
+services:
+  franken:
+    cmd: ["frankenphp", "run"]
+  vite:
+    cmd: ["bun", "node_modules/vite/bin/vite.js", "dev", "--host", "0.0.0.0"]
+  cron:
+    cmd: ["php", "artisan", "schedule:run"]
+    cron: "* * * * *"

@@ -1,0 +1,76 @@
+{
+	frankenphp
+	admin off
+	persist_config off
+	auto_https off
+	
+	servers :8000 {
+		name http
+		protocols h1 h2c
+		trusted_proxies static private_ranges
+		trusted_proxies_strict
+	}
+}
+
+(servestatic) {
+	file_server {
+		hide */.htaccess */.git*
+		disable_canonical_uris
+		pass_thru
+	}
+}
+
+(servephp) {
+	php_server {
+		root {system.wd}/public
+		resolve_root_symlink true
+		env ENABLE_X_ACCEL_REDIRECT true
+		file_server off
+	}
+}
+
+:8000 {
+	root * {system.wd}/public
+
+	encode zstd br gzip
+
+	request_header X-Sendfile-Type x-accel-redirect
+	request_header X-Accel-Mapping /=/
+
+	@storage {
+		path /storage/*
+		method GET HEAD OPTIONS
+	}
+
+	intercept {
+		@accel header X-Accel-Redirect *
+		handle_response @accel {
+			root /
+			rewrite * {resp.header.X-Accel-Redirect}
+			method GET
+			header -X-Accel-Redirect
+			file_server
+		}
+	}
+
+	route @storage {
+		root * {system.wd}/storage/app/public
+		uri strip_prefix /storage
+		header {
+			Access-Control-Allow-Origin *
+			Access-Control-Allow-Methods "GET, HEAD, OPTIONS"
+			Access-Control-Allow-Headers "Accept, Accept-Encoding, Range, X-Requested-With"
+		}
+		import servestatic
+		handle {
+			root * {system.wd}/public
+			rewrite * /index.php
+			import servephp
+		}
+	}
+
+	route * {
+		import servestatic
+		import servephp
+	}
+}

@@ -1,0 +1,28 @@
+<?php
+
+namespace App\Http\Resources;
+
+use App\Models\AccessControl;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+/**
+ * @property-read AccessControl $resource
+ * @mixin AccessControl
+ */
+class AccessControlResource extends JsonResource
+{
+    /**
+     * Transform the resource into an array.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'repository' => $this->repository,
+            'access_level' => $this->access_level,
+        ];
+    }
+}
