@@ -13,6 +13,7 @@
 	import { ChevronUpIcon, ChevronDownIcon, MinusIcon } from "@lucide/svelte";
 	import AccessControlEditor from "@/components/AccessControlEditor.svelte";
 	import LoadingButton from "@/components/LoadingButton.svelte";
+	import { noop } from "lodash-es";
 
 	const id = $props.id();
 	const inertia = useInertia();
@@ -42,8 +43,6 @@
 	let groupMap = $derived(
 		Object.fromEntries(groups.map((g) => [g.id, g.name]))
 	);
-
-	let selectedGroup: number | null = $state(null);
 
 	const form = useFormDerived(() => ({
 		username: user.username ?? "",
@@ -82,7 +81,6 @@
 		if (val) {
 			form.reset();
 			form.errors = {};
-			selectedGroup = null;
 		} else onclose?.();
 	}}
 >
@@ -168,22 +166,23 @@
 					{#if editable}
 						<Select.Root
 							type="single"
-							bind:value={selectedGroup as any}
+							bind:value={() => "", noop}
 							disabled={!availableGroups.length}
 						>
 							<Select.Trigger class="w-full">
-								<span
-									class:text-muted-foreground={!selectedGroup}
-								>
-									{groupMap[selectedGroup ?? ""] ||
-									availableGroups.length
+								<span class="text-muted-foreground">
+									{availableGroups.length
 										? "Select Group to Add"
 										: "No Available Groups"}
 								</span>
 							</Select.Trigger>
 							<Select.Content>
 								{#each availableGroups as group (group.id)}
-									<Select.Item value={group.id as any}>
+									<Select.Item
+										value={group.id as any}
+										onclick={() =>
+											form.data.groups.push(group.id)}
+									>
 										{group.name}
 									</Select.Item>
 								{/each}
@@ -195,11 +194,11 @@
 							{@const first = index === 0}
 							{@const last =
 								index === form.data.groups.length - 1}
-							<div class="flex items-center gap-2 px-4 py-2">
+							<div class="flex h-12 items-center gap-2 px-4">
 								{#if editable}
 									<Button
 										disabled={first}
-										variant="ghost"
+										variant="secondary"
 										size="icon"
 										onclick={() => {
 											const temp =
@@ -212,7 +211,7 @@
 									</Button>
 									<Button
 										disabled={last}
-										variant="ghost"
+										variant="secondary"
 										size="icon"
 										onclick={() => {
 											const temp =
@@ -224,10 +223,10 @@
 										<ChevronDownIcon />
 									</Button>
 								{/if}
-								<div class="h-9">{groupMap[gid]}</div>
+								<div>{groupMap[gid]}</div>
 								{#if editable}
 									<Button
-										variant="ghost"
+										variant="secondary"
 										size="icon"
 										class="ml-auto"
 										onclick={() => {
