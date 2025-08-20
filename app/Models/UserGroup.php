@@ -25,7 +25,7 @@ class UserGroup extends Pivot
     public $timestamps = false;
 
     /**
-     * @return BelongsTo<User, UserGroup>
+     * @return BelongsTo<User, static>
      */
     public function user(): BelongsTo
     {
@@ -33,7 +33,7 @@ class UserGroup extends Pivot
     }
 
     /**
-     * @return BelongsTo<Group, UserGroup>
+     * @return BelongsTo<Group, static>
      */
     public function group(): BelongsTo
     {

@@ -76,9 +76,9 @@ final class Token
                 'prime256v1', 'secp256r1' => 'ES256',
                 'secp384r1'               => 'ES384',
                 'secp521r1'               => 'ES512',
-                default => throw new \RuntimeException('Unsupported EC curve for JWT'),
+                default => throw new RuntimeException('Unsupported EC curve for JWT'),
             },
-            default => throw new \RuntimeException('Unsupported key type'),
+            default => throw new RuntimeException('Unsupported key type'),
         };
     }
 

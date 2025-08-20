@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection as BaseCollection;
 
 /**
  * @property int $id
@@ -32,7 +33,7 @@ class Group extends Model
     protected $fillable = ['name', 'permissions'];
 
     /**
-     * @return BelongsToMany<User, Group>
+     * @return BelongsToMany<User, static>
      */
     public function users(): BelongsToMany
     {
@@ -40,11 +41,19 @@ class Group extends Model
     }
 
     /**
-     * @return MorphMany<AccessControl, User>
+     * @return MorphMany<AccessControl, static>
      */
     public function access_controls(): MorphMany
     {
         return $this->morphMany(AccessControl::class, 'owner')
             ->orderBy('sort_order');
+    }
+
+    /**
+     * @return BaseCollection<array-key, AccessControl>
+     */
+    function getAllAccessControls(): BaseCollection
+    {
+        return $this->access_controls;
     }
 }

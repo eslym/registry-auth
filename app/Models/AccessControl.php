@@ -18,7 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int $sort_order
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read User|Group $owner
+ * @property-read User|Group|AccessToken $owner
  * @method static Builder<static>|AccessControl newModelQuery()
  * @method static Builder<static>|AccessControl newQuery()
  * @method static Builder<static>|AccessControl query()
@@ -37,7 +37,7 @@ class AccessControl extends Model
     ];
 
     /**
-     * @return MorphTo<User|Group, AccessControl>
+     * @return MorphTo<User|Group|AccessToken, static>
      */
     public function owner(): MorphTo
     {

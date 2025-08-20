@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Lib\ACLGlob;
+use App\Models\AccessToken;
 use App\Models\User;
 use App\Registry\ErrorCode;
-use App\Registry\Grant;
-use App\Registry\ResourceType;
 use App\Registry\Token;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -20,30 +18,43 @@ class TokenController extends Controller
         if ($request->query('service') !== config('registry.service')) {
             return $this->failed(ErrorCode::DENIED, 'Invalid service');
         }
-        if ($request->getUser()) {
-            if (Auth::once([
-                'username' => $request->getUser(),
-                'password' => $request->getPassword(),
-            ])) {
-                $user = Auth::user();
-                if ($user->password_expired) {
-                    return $this->failed(
-                        ErrorCode::UNAUTHORIZED,
-                        'Password has expired, please change your password'
-                    );
+
+        $grantable = null;
+        if ($username = $request->getUser()) {
+            $user = User::where('username', $username)->first();
+            if (!$user) {
+                return $this->failed(ErrorCode::UNAUTHORIZED, 'Invalid credentials');
+            }
+            $password = $request->getPassword();
+            if (preg_match('/^([1-9][0-9]*)\|([a-z0-9]+)$/i', $password, $matches)) {
+                [, $tokenId, $tokenSecret] = $matches;
+                /** @var AccessToken $token */
+                $token = $user->access_tokens()
+                    ->where('id', $tokenId)
+                    ->first();
+                if ($token && Hash::check($tokenSecret, $token->token)) {
+                    if ($token->expires_at && $token->expires_at->isPast()) {
+                        return $this->failed(ErrorCode::UNAUTHORIZED, 'Token expired');
+                    }
+                    $grantable = $token;
                 }
-            } else {
-                return $this->failed(
-                    ErrorCode::UNAUTHORIZED,
-                    'Invalid username or password'
-                );
+            }
+            if (!$grantable && Hash::check($password, $user->password)) {
+                if ($user->password_expired_at && $user->password_expired_at->isPast()) {
+                    return $this->failed(ErrorCode::UNAUTHORIZED, 'Password has expired, please reset it');
+                }
+                $grantable = $user;
             }
         } else {
-            $user = User::whereNull('username')->first();
+            $grantable = User::whereNull('username')->first();
         }
+        if (!$grantable) {
+            return $this->failed(ErrorCode::UNAUTHORIZED, 'Invalid credentials');
+        }
+
         try {
-            $grants = $this->grant($user, explode(' ', $request->query->getString('scope')));
-            return response()->json(Token::issue($user->username ?? '', $grants->all()));
+            $grants = $grantable->grant($request->query->get('scopes', ''));
+            return response()->json(Token::issue($grantable->getUsername(), $grants));
         } catch (Throwable $e) {
             Log::error($e);
             return $this->failed(
@@ -56,44 +67,7 @@ class TokenController extends Controller
         }
     }
 
-    private function grant(User $user, array $scopes)
-    {
-        $lazy = function () use ($user, &$lazy) {
-            $controls = $user->getAllAccessControls();
-            $lazy = fn() => $controls;
-            return $controls;
-        };
-
-        return collect($scopes)->map(function ($scope) use ($user, $lazy) {
-            if (empty($scope)) return null;
-            $grant = Grant::parse($scope);
-            if ($scope === 'registry:catalog:*') {
-                return $user->isAnonymous() && !config('registry.anonymous_catalog', false) ?
-                    null : $grant;
-            }
-            switch ($grant->type) {
-                case ResourceType::REGISTRY:
-                    return $user->is_admin ? $grant : null;
-                case ResourceType::REPOSITORY:
-                    $controls = $lazy();
-                    foreach ($controls as $control) {
-                        if (ACLGlob::match($control->repository, $grant->name)) {
-                            $allowed = $control->access_level->toActions();
-                            $grant = $grant->restrictTo($allowed);
-                            if (empty($grant->actions)) {
-                                return null;
-                            }
-                            return $grant;
-                        }
-                    }
-                    return null;
-                default:
-                    return null;
-            }
-        })->filter(fn($v) => $v);
-    }
-
-    public function failed(ErrorCode $code, string $message, mixed $detail = null)
+    private function failed(ErrorCode $code, string $message, mixed $detail = null)
     {
         return response()->json([
             'errors' => [

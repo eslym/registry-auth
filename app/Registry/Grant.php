@@ -11,8 +11,9 @@ class Grant implements JsonSerializable
     {
     }
 
-    public function restrictTo(array $actions): static {
-        $actions = array_filter($actions, fn ($action) => in_array($action, $this->actions));
+    public function restrictTo(array $actions): static
+    {
+        $actions = array_filter($actions, fn($action) => in_array($action, $this->actions));
         return new static($this->type, $this->name, $actions);
     }
 
@@ -23,6 +24,11 @@ class Grant implements JsonSerializable
             'name' => $this->name,
             'actions' => array_map(fn(Action $action) => $action->value, $this->actions),
         ];
+    }
+
+    public function isCatalog(): bool
+    {
+        return $this->type === ResourceType::REGISTRY && $this->name === 'catalog' && $this->actions == ['*'];
     }
 
     public static function parse(string $scope): static

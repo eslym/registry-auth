@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Concerns\GrantRegistryToken;
+use App\Models\Contracts\CanGrantRegistryAccess;
 use Database\Factories\UserFactory;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
@@ -10,6 +12,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\DatabaseNotification;
@@ -29,22 +32,24 @@ use Illuminate\Support\Collection as BaseCollection;
  * @property Carbon|null $updated_at
  * @property-read Collection<int, AccessControl> $access_controls
  * @property-read int|null $access_controls_count
- * @property-read bool $password_expired
+ * @property-read Collection<int, UserACL> $all_access_controls
+ * @property-read int|null $all_access_controls_count
  * @property-read UserGroup|null $pivot
  * @property-read Collection<int, Group> $groups
  * @property-read int|null $groups_count
  * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
+ * @property-read bool $password_expired
  * @method static UserFactory factory($count = null, $state = [])
  * @method static Builder<static>|User newModelQuery()
  * @method static Builder<static>|User newQuery()
  * @method static Builder<static>|User query()
  * @mixin Eloquent
  */
-class User extends Authenticatable
+class User extends Authenticatable implements CanGrantRegistryAccess
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, GrantRegistryToken;
 
     protected $table = 'users';
 
@@ -88,12 +93,12 @@ class User extends Authenticatable
     {
         return Attribute::get(
             fn($attributes): bool => $this->password_expired_at &&
-                now()->isAfter($this->password_expired_at)
+                $this->password_expired_at->isPast()
         );
     }
 
     /**
-     * @return BelongsToMany<Group, User, UserGroup>
+     * @return BelongsToMany<Group, static, UserGroup>
      */
     public function groups(): BelongsToMany
     {
@@ -102,12 +107,28 @@ class User extends Authenticatable
     }
 
     /**
-     * @return MorphMany<AccessControl, User>
+     * @return HasMany<AccessToken, static>
+     */
+    public function access_tokens(): HasMany
+    {
+        return $this->hasMany(AccessToken::class, 'user_id', 'id');
+    }
+
+    /**
+     * @return MorphMany<AccessControl, static>
      */
     public function access_controls(): MorphMany
     {
         return $this->morphMany(AccessControl::class, 'owner')
             ->orderBy('sort_order');
+    }
+
+    /**
+     * @return HasMany<UserACL, static>
+     */
+    public function all_access_controls(): HasMany
+    {
+        return $this->hasMany(UserACL::class, 'owner_id');
     }
 
     public function isAnonymous(): bool
@@ -120,9 +141,16 @@ class User extends Authenticatable
      */
     public function getAllAccessControls(): BaseCollection
     {
-        $this->load('access_controls', 'groups.access_controls');
-        return $this->access_controls->merge($this->groups->flatMap(function (Group $group) {
-            return $group->access_controls;
-        }));
+        return collect($this->all_access_controls->all());
+    }
+
+    function canListCatalog(): bool
+    {
+        return $this->username !== null || config('registry.anonymous_catalog', false);
+    }
+
+    function getUsername(): string
+    {
+        return $this->username ?? '';
     }
 }
