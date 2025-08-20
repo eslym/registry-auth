@@ -87,6 +87,8 @@ class UserController extends Controller
 
         if ($data['change_password']) {
             $data['password_expired_at'] = now();
+        } else if ($expiration = config('password.expiration')) {
+            $data['password_expired_at'] = Carbon::now()->addDays($expiration);
         } else {
             $data['password_expired_at'] = null;
         }
@@ -159,7 +161,7 @@ class UserController extends Controller
             'access_controls.*.id' => ['nullable', 'integer'],
             'access_controls.*.repository' => ['required', 'string'],
             'access_controls.*.access_level' => ['required', Rule::enum(AccessLevel::class)],
-        ], [] ,[
+        ], [], [
             'access_controls.*.repository' => 'repository pattern',
         ]);
 
@@ -179,9 +181,12 @@ class UserController extends Controller
 
             if ($data['change_password']) {
                 $data['password_expired_at'] = now();
+            } else if ($expiration = config('password.expiration')) {
+                $data['password_expired_at'] = Carbon::now()->addDays($expiration);
             } else {
                 $data['password_expired_at'] = null;
             }
+
             $user->save();
         }
 

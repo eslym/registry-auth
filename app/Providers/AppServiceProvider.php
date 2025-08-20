@@ -46,9 +46,21 @@ class AppServiceProvider extends ServiceProvider
         RedirectIfAuthenticated::redirectUsing(fn() => route('dashboard'));
         Authenticate::redirectUsing(fn() => route('auth.login'));
         Password::defaults(function () {
-            $rule = Password::min(8)->letters()->mixedCase()->numbers()->symbols();
-            if ($this->app->isProduction()) {
-                $rule = $rule->uncompromised(3);
+            $rule = Password::min(config('password.validation.min', 8));
+            if(config('password.validation.max', 8) !== false) {
+                $rule = $rule->max(config('password.validation.max', 64));
+            }
+            if(config('password.validation.mixed_case', true)) {
+                $rule = $rule->mixedCase();
+            }
+            if(config('password.validation.numbers', true)) {
+                $rule = $rule->numbers();
+            }
+            if(config('password.validation.symbols', true)) {
+                $rule = $rule->symbols();
+            }
+            if(config('password.validation.uncompromised',  $this->app->isProduction())) {
+                $rule = $rule->uncompromised(config('password.validation.threshold', 3));
             }
             return $rule;
         });
