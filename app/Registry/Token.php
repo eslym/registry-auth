@@ -72,8 +72,13 @@ final class Token
         }
         return match ($d['type']) {
             OPENSSL_KEYTYPE_RSA => 'RS256',
-            OPENSSL_KEYTYPE_EC => 'ES256',
-            default => throw new RuntimeException('Unsupported key type for JWT'),
+            OPENSSL_KEYTYPE_EC  => match ($d['ec']['curve_name'] ?? '') {
+                'prime256v1', 'secp256r1' => 'ES256',
+                'secp384r1'               => 'ES384',
+                'secp521r1'               => 'ES512',
+                default => throw new \RuntimeException('Unsupported EC curve for JWT'),
+            },
+            default => throw new \RuntimeException('Unsupported key type'),
         };
     }
 

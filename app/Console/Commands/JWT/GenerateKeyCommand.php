@@ -82,8 +82,8 @@ class GenerateKeyCommand extends Command
                 return 1;
             }
         } else {
-            if (!in_array($this->size, [384, 521])) {
-                $this->error('EC key size must be 384 or 521.');
+            if (!in_array($this->size, [256, 384, 521])) {
+                $this->error('EC key size must be 256, 384 or 521.');
                 return 1;
             }
         }
@@ -93,7 +93,11 @@ class GenerateKeyCommand extends Command
             'private_key_type' => $this->type === 'rsa' ? OPENSSL_KEYTYPE_RSA : OPENSSL_KEYTYPE_EC,
         ];
         if ($this->type === 'ec') {
-            $opts['curve_name'] = $this->size === 384 ? 'secp384r1' : 'secp521r1';
+            $opts['curve_name'] = match ($this->size) {
+                256 => 'prime256v1',
+                384 => 'secp384r1',
+                521 => 'secp521r1',
+            };
         } else {
             $opts['digest_alg'] = 'sha256';
         }
@@ -118,20 +122,31 @@ class GenerateKeyCommand extends Command
         if (!$this->dryRun && !$this->writeFile($this->public, fn() => $details['key'], 'public key')) return 1;
         if ($this->dryRun) $this->info("Dry run: Public key would be written to {$this->public}");
 
-        $options = ['commonName' => config('registry.issuer')];
-        $csr = openssl_csr_new($options, $key, ['digest_alg' => 'sha256']);
+        $csrDigest = match (true) {
+            $this->type === 'ec' && $this->size === 384 => 'sha384',
+            $this->type === 'ec' && $this->size === 521 => 'sha512',
+            default => 'sha256',
+        };
+
+        $dn = ['commonName' => config('registry.issuer')];
+        $csr = openssl_csr_new($dn, $key, ['digest_alg' => $csrDigest]);
         if (!$csr) {
             $this->error('Failed to create CSR');
             return 1;
         }
-        $cert = openssl_csr_sign($csr, null, $key, 365, ['digest_alg' => 'sha256']);
+        $cert = openssl_csr_sign($csr, null, $key, 365, ['digest_alg' => $csrDigest]);
         if (!$cert) {
             $this->error('Failed to sign CSR');
             return 1;
         }
 
         if ($this->checkFile($this->cert, $interactive, 'Certificate')) return 1;
-        if (!$this->dryRun && !$this->writeFile($this->cert, fn() => openssl_x509_export($cert, $out) ? $out : false, 'certificate')) return 1;
+        if (!$this->dryRun && !$this->writeFile($this->cert, function () use ($cert) {
+                if (!openssl_x509_export($cert, $out)) {
+                    return false;
+                }
+                return $out;
+            }, 'certificate')) return 1;
         if ($this->dryRun) $this->info("Dry run: Certificate would be written to {$this->cert}");
 
         if ($this->writeEnv || ($interactive && confirm('Update .env file?'))) {
@@ -218,7 +233,7 @@ class GenerateKeyCommand extends Command
         if (!$this->option('size')) {
             $this->size = $this->type === 'rsa'
                 ? (int)select('Select key size', [2048 => '2048', 3072 => '3072', 4096 => '4096'], 2048)
-                : (int)select('Select curve size', [384 => '384', 521 => '521'], 384);
+                : (int)select('Select curve size', [256 => '256', 384 => '384', 521 => '521'], 384);
         }
         if (!$this->option('private')) {
             $this->private = text('Enter private key file path', '', $this->private, true);
