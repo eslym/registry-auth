@@ -52,7 +52,7 @@
 
 	function viewUrl(id: number) {
 		const url = new URL(inertia.page.url, window.location.origin);
-		url.pathname = `/group/${id}`;
+		url.pathname = `/groups/${id}`;
 		return url.toString();
 	}
 
