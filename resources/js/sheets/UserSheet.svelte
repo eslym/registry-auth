@@ -52,7 +52,7 @@
 			user.access_controls ?? ([] as Partial<Model.AccessControl>[]),
 		password: "",
 		repeat_password: "",
-		password_expired_at: user.password_expired_at ?? null
+		change_password: Boolean(user.password_expired_at)
 	}));
 
 	let anon = $derived(anonymous && user.username === null);
@@ -118,12 +118,12 @@
 							id="{id}-username"
 							bind:value={form.data.username}
 							disabled={editable && Boolean(user.id)}
-							readonly={!editable}
+							readonly
 						/>
 						<FormErrors errors={form.errors.username} />
 					</div>
 				{/if}
-				{#if editable && (!user.id || !anonymous)}
+				{#if !user.id || !anonymous}
 					<div class="mt-6 grid gap-2">
 						<div class="flex items-center gap-2">
 							<Label for="{id}-is-admin" class="grow"
@@ -132,34 +132,55 @@
 							<Switch
 								id="{id}-is-admin"
 								bind:checked={form.data.is_admin}
-								disabled={!editable}
+								disabled={!editable || form.processing}
 							/>
 						</div>
 					</div>
-					<div class="grid gap-2">
-						<Label for="{id}-password">Password</Label>
-						<Input
-							id="{id}-password"
-							type="password"
-							bind:value={form.data.password}
-							disabled={!editable}
-							placeholder={user.id
-								? "Leave empty to keep the same password"
-								: ""}
-						/>
-						<FormErrors errors={form.errors.password} />
-					</div>
-					<div class="grid gap-2">
-						<Label for="{id}-repeat-password">Repeat Password</Label
-						>
-						<Input
-							id="{id}-repeat-password"
-							type="password"
-							bind:value={form.data.repeat_password}
-							disabled={!editable}
-						/>
-						<FormErrors errors={form.errors.repeat_password} />
-					</div>
+					{#if editable}
+						<div class="grid gap-2">
+							<Label for="{id}-password">Password</Label>
+							<Input
+								id="{id}-password"
+								type="password"
+								bind:value={form.data.password}
+								disabled={form.processing}
+								placeholder={user.id
+									? "Leave empty to keep the same password"
+									: ""}
+							/>
+							<FormErrors errors={form.errors.password} />
+						</div>
+						<div class="grid gap-2">
+							<Label for="{id}-repeat-password"
+								>Repeat Password</Label
+							>
+							<Input
+								id="{id}-repeat-password"
+								type="password"
+								bind:value={form.data.repeat_password}
+								disabled={Boolean(
+									form.processing ||
+										(user.id && !form.data.password)
+								)}
+							/>
+							<FormErrors errors={form.errors.repeat_password} />
+						</div>
+						<div class="grid gap-2">
+							<div class="flex items-center gap-2">
+								<Label for="{id}-change-password" class="grow">
+									Change Password after Login
+								</Label>
+								<Switch
+									id="{id}-change-password"
+									bind:checked={form.data.change_password}
+									disabled={Boolean(
+										form.processing ||
+											(user.id && !form.data.password)
+									)}
+								/>
+							</div>
+						</div>
+					{/if}
 				{/if}
 				<div class="grid gap-2 not-first:mt-6">
 					<Label>Groups</Label>

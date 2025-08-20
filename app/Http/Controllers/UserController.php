@@ -65,7 +65,7 @@ class UserController extends Controller
             'username' => ['required', 'string', 'min:3', 'max:255', 'regex:/^[a-zA-Z0-9._-]+$/', 'unique:users,username'],
             'password' => ['required', 'string', 'confirmed:repeat_password', Password::defaults()],
             'repeat_password' => ['required', 'string'],
-            'password_expired_at' => ['nullable', 'date', 'date_format:Y-m-d'],
+            'change_password' => ['boolean'],
             'is_admin' => ['boolean'],
             'groups' => ['array'],
             'groups.*' => ['integer', 'exists:groups,id'],
@@ -85,8 +85,8 @@ class UserController extends Controller
             }
         }
 
-        if (!empty($data['password_expired_at'])) {
-            $data['password_expired_at'] = Carbon::parse($data['password_expired_at'], $request->cookie('tz', config('app.timezone')));
+        if ($data['change_password']) {
+            $data['password_expired_at'] = now();
         } else {
             $data['password_expired_at'] = null;
         }
@@ -147,7 +147,7 @@ class UserController extends Controller
         $nonAnonymous = [
             'password' => ['nullable', 'string', 'confirmed:repeat_password', Password::defaults()],
             'repeat_password' => ['required_with:password', 'nullable', 'string'],
-            'password_expired_at' => ['nullable', 'date', 'date_format:Y-m-d'],
+            'change_password' => ['boolean'],
             'is_admin' => ['boolean']
         ];
 
@@ -177,10 +177,10 @@ class UserController extends Controller
                 $user->password = $data['password'];
             }
 
-            if (!empty($data['password_expired_at'])) {
-                $user->password_expired_at = Carbon::parse($data['password_expired_at'], $request->cookie('tz', config('app.timezone')));
+            if ($data['change_password']) {
+                $data['password_expired_at'] = now();
             } else {
-                $user->password_expired_at = null;
+                $data['password_expired_at'] = null;
             }
             $user->save();
         }
