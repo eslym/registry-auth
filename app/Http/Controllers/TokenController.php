@@ -33,9 +33,10 @@ class TokenController extends Controller
                     ->where('id', $tokenId)
                     ->first();
                 if ($token && Hash::check($tokenSecret, $token->token)) {
-                    if ($token->expires_at && $token->expires_at->isPast()) {
+                    if ($token->expired_at && $token->expired_at->isPast()) {
                         return $this->failed(ErrorCode::UNAUTHORIZED, 'Token expired');
                     }
+                    $token->last_used_at = now();
                     $grantable = $token;
                 }
             }

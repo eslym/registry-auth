@@ -77,22 +77,20 @@
 			{/if}
 			<div class="grid grow gap-2">
 				<div class="grid gap-0.5">
-					<Label for="{id}-access-control-{index}-repo">
-						Repository Pattern
+					<Label for="{id}-access-control-{index}-rule">
+						Rule Pattern
 					</Label>
 					<Input
-						id="{id}-access-control-{index}-repo"
+						id="{id}-access-control-{index}-rule"
 						type="text"
 						bind:value={
-							() => control.repository,
-							(v) => (control.repository = v?.toLowerCase())
+							() => control.rule,
+							(v) => (control.rule = v?.toLowerCase())
 						}
 						readonly={!editable}
 					/>
 					<FormErrors
-						errors={form.errors[
-							`access_controls.${index}.repository`
-						]}
+						errors={form.errors[`access_controls.${index}.rule`]}
 					/>
 				</div>
 				<div class="grid gap-0.5">

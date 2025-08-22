@@ -18,7 +18,7 @@ trait GrantRegistryToken
             return null;
         }
         foreach ($this->getAllAccessControls() as $control) {
-            if (ACLGlob::match($control->repository, $grant->name)) {
+            if (ACLGlob::match($control->rule, $grant->name)) {
                 $allowed = $control->access_level->toActions();
                 $grant = $grant->restrictTo($allowed);
                 if (empty($grant->actions)) {

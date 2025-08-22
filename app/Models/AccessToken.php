@@ -20,13 +20,11 @@ use Illuminate\Support\Collection as BaseCollection;
  * @property int $user_id
  * @property string|null $description
  * @property Carbon|null $last_used_at
- * @property Carbon|null $expires_at
+ * @property Carbon|null $expired_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, AccessControl> $access_controls
  * @property-read int|null $access_controls_count
- * @property-read Collection<int, AccessToken> $access_tokens
- * @property-read int|null $access_tokens_count
  * @property-read User $user
  * @method static Builder<static>|AccessToken newModelQuery()
  * @method static Builder<static>|AccessToken newQuery()
@@ -38,6 +36,16 @@ class AccessToken extends Model implements CanGrantRegistryAccess
     use GrantRegistryToken {
         grantScope as protected grantScopeLocal;
     }
+
+    protected $fillable= [
+        'token',
+        'user_id',
+        'description',
+        'last_used_at',
+        'expired_at',
+    ];
+
+    protected $hidden = ['token'];
 
     /**
      * @return BelongsTo<User, static>
@@ -61,7 +69,7 @@ class AccessToken extends Model implements CanGrantRegistryAccess
         return [
             'token' => 'hashed',
             'last_used_at' => 'datetime',
-            'expires_at' => 'datetime',
+            'expired_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];

@@ -20,7 +20,7 @@
 >
 	<CalendarPrimitive.MonthSelect
 		bind:ref
-		class="absolute inset-0 opacity-0"
+		class="bg-background absolute inset-0 opacity-0"
 		{...restProps}
 	>
 		{#snippet child({ props, monthItems, selectedMonthItem })}

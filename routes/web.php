@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GroupController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\EncryptHistoryMiddleware;
@@ -21,8 +22,17 @@ Route::prefix('/')->middleware(['auth', EncryptHistoryMiddleware::class])->group
     Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])
         ->name('auth.logout');
 
-    Route::post('/update-password', [DashboardController::class, 'updatePassword'])
-        ->name('dashboard.update-password');
+    Route::prefix('/profile')->group(function () {
+        Route::get('/{token?}', [ProfileController::class, 'index'])
+            ->name('profile.index');
+        Route::post('/', [ProfileController::class, 'createToken'])
+            ->name('profile.createToken');
+        Route::delete('/{token}', [ProfileController::class, 'revokeToken'])
+            ->name('profile.revokeToken');
+    });
+
+    Route::post('/update-password', [ProfileController::class, 'updatePassword'])
+        ->name('profile.update-password');
 
     Route::prefix('/users')->group(function () {
         Route::get('/{user?}', [UserController::class, 'index'])

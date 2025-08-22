@@ -117,8 +117,7 @@
 						<Input
 							id="{id}-username"
 							bind:value={form.data.username}
-							disabled={editable && Boolean(user.id)}
-							readonly
+							readonly={!editable || Boolean(user.id)}
 						/>
 						<FormErrors errors={form.errors.username} />
 					</div>

@@ -97,7 +97,8 @@ The rule pattern supports glob pattern. Users' access control rules is more prio
 # Planning Features
 
 - [ ] Add image management
-- [ ] Add personal access token
+- [x] ~~Add personal access token~~
+- [ ] Stable CA for easier key rotation
 
 # License
 

@@ -21,7 +21,7 @@ class AccessControlResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'repository' => $this->repository,
+            'rule' => $this->rule,
             'access_level' => $this->access_level,
         ];
     }

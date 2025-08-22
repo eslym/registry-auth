@@ -21,45 +21,4 @@ class DashboardController extends Controller
             'groups' => $groups,
         ]);
     }
-
-    public function updatePassword(Request $request)
-    {
-        /** @var User $user */
-        $user = $request->user();
-
-        if ($expired = $user->password_expired) {
-            $data = $request->validate([
-                'new_password' => [
-                    'bail', 'required', 'string',
-                    Password::defaults(),
-                    'confirmed:repeat_password',
-                    new PasswordMustDifferentRule($user->password)
-                ],
-                'repeat_password' => ['required', 'string'],
-            ]);
-        } else {
-            $data = $request->validate([
-                'new_password' => [
-                    'bail', 'required', 'string',
-                    Password::defaults(),
-                    'confirmed:repeat_password',
-                ],
-                'repeat_password' => ['required', 'string'],
-                'current_password' => [
-                    'required', 'string', 'current_password',
-                ]
-            ]);
-        }
-
-        $user->update([
-            'password' => $data['new_password'],
-            'password_expired_at' => null,
-        ]);
-
-        return redirect()->back()
-            ->with('toast', $expired ?
-                Toast::success("Password Updated", "You can now continue to use the application.") :
-                Toast::success("Password Updated", "Your password has been updated successfully.")
-            );
-    }
 }

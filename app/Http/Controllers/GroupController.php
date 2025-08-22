@@ -10,6 +10,7 @@ use App\Lib\Filter\FilterBuilder;
 use App\Lib\Toast;
 use App\Models\AccessControl;
 use App\Models\Group;
+use App\Rules\AccessControlsRule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -68,21 +69,8 @@ class GroupController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'min:2', 'max:255'],
-            'access_controls' => ['array'],
-            'access_controls.*' => ['array'],
-            'access_controls.*.repository' => ['required', 'string', 'max:255'],
-            'access_controls.*.access_level' => ['required', Rule::enum(AccessLevel::class)],
-        ], [], [
-            'access_controls.*.repository' => 'repository pattern',
+            'access_controls' => ['array', new AccessControlsRule()],
         ]);
-
-        if (!empty($data['access_controls'])) {
-            $errors = $this->validateAccessControls($data['access_controls']);
-            if (!empty($errors)) {
-                return redirect()->back()
-                    ->withErrors($errors);
-            }
-        }
 
         if ($group->exists) {
             $group->name = $data['name'];
@@ -94,16 +82,7 @@ class GroupController extends Controller
             ]);
         }
 
-        if (!empty($data['access_controls'])) {
-            $inserts = collect($data['access_controls'])->values()->map(fn($v, $sort) => [
-                'owner_type' => $group->getMorphClass(),
-                'owner_id' => $group->id,
-                'repository' => strtolower($v['repository']),
-                'access_level' => $v['access_level'],
-                'sort_order' => $sort,
-            ])->all();
-            AccessControl::insert($inserts);
-        }
+        AccessControl::syncWith($group, $data['access_controls'] ?? []);
 
         return redirect()->back()
             ->with('toast',
@@ -135,21 +114,5 @@ class GroupController extends Controller
                     "The group has been successfully deleted."
                 )
             );
-    }
-
-    private function validateAccessControls(array $accessControls): array
-    {
-        $exists = [];
-        $errors = [];
-        $repositories = collect($accessControls)->pluck('repository');
-        foreach ($repositories as $index => $repo) {
-            if (isset($exists[$repo])) {
-                $errors["access_controls.$exists[$repo].repository"] = ["Duplicated entry."];
-                $errors["access_controls.$index.repository"] = ["Duplicated entry."];
-                continue;
-            }
-            $exists[$repo] = $index;
-        }
-        return $errors;
     }
 }

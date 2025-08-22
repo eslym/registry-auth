@@ -13,13 +13,13 @@
 
 <span
 	class={cn(
-		"has-focus:border-ring border-input has-focus:ring-ring/50 relative flex rounded-md border shadow-xs has-focus:ring-[3px]",
+		"has-focus:border-ring border-input has-focus:ring-ring/50 relative flex rounded-md border  shadow-xs has-focus:ring-[3px]",
 		className
 	)}
 >
 	<CalendarPrimitive.YearSelect
 		bind:ref
-		class="absolute inset-0 opacity-0"
+		class="bg-background absolute inset-0 opacity-0"
 		{...restProps}
 	>
 		{#snippet child({ props, yearItems, selectedYearItem })}

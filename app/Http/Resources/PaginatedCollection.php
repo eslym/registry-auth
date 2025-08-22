@@ -8,6 +8,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * @property-read LengthAwarePaginator $resource
+ * @method static make(LengthAwarePaginator $resource, string $collects, array $meta = [])
  */
 class PaginatedCollection extends JsonResource
 {

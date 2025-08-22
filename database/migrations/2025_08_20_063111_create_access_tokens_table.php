@@ -19,7 +19,7 @@ return new class extends Migration
                 ->onDelete('cascade');
             $table->string('description')->nullable();
             $table->timestamp('last_used_at')->nullable();
-            $table->timestamp('expires_at')->nullable();
+            $table->timestamp('expired_at')->nullable();
             $table->timestamps();
         });
     }

@@ -102,7 +102,7 @@
 </svelte:head>
 
 <Card.Root>
-	<Card.Header>
+	<Card.Header class="max-md:px-3">
 		<Card.Title><h1>Groups</h1></Card.Title>
 		<Card.Description>
 			Showing {from + 1} to {to} of {groups.page.total}.
@@ -117,7 +117,7 @@
 			</Card.Action>
 		{/if}
 	</Card.Header>
-	<Card.Content>
+	<Card.Content class="max-md:px-3">
 		<div class="flex flex-row flex-wrap gap-x-2 gap-y-2">
 			<Input
 				placeholder="Search"

@@ -13,6 +13,7 @@ use App\Models\AccessControl;
 use App\Models\Group;
 use App\Models\User;
 use App\Models\UserGroup;
+use App\Rules\AccessControlsRule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
@@ -69,21 +70,8 @@ class UserController extends Controller
             'is_admin' => ['boolean'],
             'groups' => ['array'],
             'groups.*' => ['integer', 'exists:groups,id'],
-            'access_controls' => ['array'],
-            'access_controls.*' => ['array'],
-            'access_controls.*.repository' => ['required', 'string', 'max:255'],
-            'access_controls.*.access_level' => ['required', Rule::enum(AccessLevel::class)],
-        ], [], [
-            'access_controls.*.repository' => 'repository pattern',
+            'access_controls' => ['array', new AccessControlsRule()],
         ]);
-
-        if (!empty($data['access_controls'])) {
-            $errors = $this->validateAccessControls($data['access_controls']);
-            if (!empty($errors)) {
-                return redirect()->back()
-                    ->withErrors($errors);
-            }
-        }
 
         if ($data['change_password']) {
             $data['password_expired_at'] = now();
@@ -114,16 +102,7 @@ class UserController extends Controller
             }
         }
 
-        if (!empty($data['access_controls'])) {
-            $inserts = collect($data['access_controls'])->values()->map(fn($v, $sort) => [
-                'owner_type' => $user->getMorphClass(),
-                'owner_id' => $user->id,
-                'repository' => strtolower($v['repository']),
-                'access_level' => $v['access_level'],
-                'sort_order' => $sort,
-            ])->all();
-            AccessControl::insert($inserts);
-        }
+        AccessControl::syncWith($user, $data['access_controls'] ?? []);
 
         return redirect()->back()
             ->with('toast',
@@ -157,21 +136,8 @@ class UserController extends Controller
             ...($user->username === null || auth()->id() === $user->id ? [] : $nonAnonymous),
             'groups' => ['array'],
             'groups.*' => ['integer'],
-            'access_controls.*' => ['array'],
-            'access_controls.*.id' => ['nullable', 'integer'],
-            'access_controls.*.repository' => ['required', 'string'],
-            'access_controls.*.access_level' => ['required', Rule::enum(AccessLevel::class)],
-        ], [], [
-            'access_controls.*.repository' => 'repository pattern',
+            'access_controls' => ['array', new AccessControlsRule()],
         ]);
-
-        if (!empty($data['access_controls'])) {
-            $errors = $this->validateAccessControls($data['access_controls']);
-            if (!empty($errors)) {
-                return redirect()->back()
-                    ->withErrors($errors);
-            }
-        }
 
         if ($user->username !== null && auth()->id() !== $user->id) {
             $user->is_admin = $data['is_admin'] ?? false;
@@ -205,17 +171,7 @@ class UserController extends Controller
             }
         }
 
-        $user->access_controls()->delete();
-        if (!empty($data['access_controls'])) {
-            $inserts = collect($data['access_controls'])->values()->map(fn($v, $sort) => [
-                'owner_type' => $user->getMorphClass(),
-                'owner_id' => $user->id,
-                'repository' => strtolower($v['repository']),
-                'access_level' => $v['access_level'],
-                'sort_order' => $sort,
-            ])->all();
-            AccessControl::insert($inserts);
-        }
+        AccessControl::syncWith($user, $data['access_controls'] ?? []);
 
         return redirect()->back()
             ->with('toast',
@@ -263,21 +219,5 @@ class UserController extends Controller
                     "The user has been successfully deleted."
                 )
             );
-    }
-
-    private function validateAccessControls(array $accessControls): array
-    {
-        $exists = [];
-        $errors = [];
-        $repositories = collect($accessControls)->pluck('repository');
-        foreach ($repositories as $index => $repo) {
-            if (isset($exists[$repo])) {
-                $errors["access_controls.$exists[$repo].repository"] = ["Duplicated entry."];
-                $errors["access_controls.$index.repository"] = ["Duplicated entry."];
-                continue;
-            }
-            $exists[$repo] = $index;
-        }
-        return $errors;
     }
 }

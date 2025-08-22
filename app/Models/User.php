@@ -32,6 +32,8 @@ use Illuminate\Support\Collection as BaseCollection;
  * @property Carbon|null $updated_at
  * @property-read Collection<int, AccessControl> $access_controls
  * @property-read int|null $access_controls_count
+ * @property-read Collection<int, AccessToken> $access_tokens
+ * @property-read int|null $access_tokens_count
  * @property-read Collection<int, UserACL> $all_access_controls
  * @property-read int|null $all_access_controls_count
  * @property-read UserGroup|null $pivot

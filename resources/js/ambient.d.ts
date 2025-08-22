@@ -80,8 +80,18 @@ declare global {
 
 		export interface AccessControl {
 			id: number;
-			repository: string;
+			rule: string;
 			access_level: "denied" | "pull-only" | "pull-push";
+		}
+
+		export interface AccessToken {
+			id: number;
+			description: string;
+			last_used_at: string | null;
+			expired_at: string | null;
+			created_at: string;
+
+			access_controls: AccessControl[];
 		}
 	}
 
