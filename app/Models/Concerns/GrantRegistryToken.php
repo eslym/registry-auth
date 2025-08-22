@@ -35,13 +35,13 @@ trait GrantRegistryToken
      */
     public function grant(string $scopes): array
     {
-        return collect(explode(' ', $scopes))->each(function (string $scope) {
+        return collect(explode(' ', $scopes))->map(function (string $scope) {
             if (empty($scope)) {
                 return null;
             }
             return $this->grantScope($scope);
         })
-            ->filter()
+            ->filter(fn($g) => !empty($g?->actions))
             ->all();
     }
 }

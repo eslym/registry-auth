@@ -83,7 +83,7 @@ class AccessToken extends Model implements CanGrantRegistryAccess
     public function grantScope(string|Grant $scope): ?Grant
     {
         if (is_string($scope)) {
-            $scope = Grant::fromString($scope);
+            $scope = Grant::parse($scope);
         }
         $userGrant = $this->user->grantScope($scope);
         if (!$userGrant) return null;
