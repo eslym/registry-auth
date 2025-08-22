@@ -54,7 +54,7 @@ class TokenController extends Controller
         }
 
         try {
-            $grants = $grantable->grant($request->query->get('scopes', ''));
+            $grants = $grantable->grant($request->query->get('scope', ''));
             return response()->json(Token::issue($grantable->getUsername(), $grants));
         } catch (Throwable $e) {
             Log::error($e);

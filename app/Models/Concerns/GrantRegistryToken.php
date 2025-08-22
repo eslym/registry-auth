@@ -41,7 +41,7 @@ trait GrantRegistryToken
             }
             return $this->grantScope($scope);
         })
-            ->filter(fn($grant) => !empty($grant?->actions))
+            ->filter()
             ->all();
     }
 }
