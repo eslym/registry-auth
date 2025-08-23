@@ -37,6 +37,7 @@ class TokenController extends Controller
                         return $this->failed(ErrorCode::UNAUTHORIZED, 'Token expired');
                     }
                     $token->last_used_at = now();
+                    $token->save();
                     $grantable = $token;
                 }
             }
