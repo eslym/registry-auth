@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\JWT;
 
+use Dotenv\Dotenv;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 use function Laravel\Prompts\confirm;
@@ -194,17 +195,26 @@ class GenerateKeyCommand extends Command
 
     private function updateEnv(): void
     {
-        $envPath = base_path('.env');
+        $envPath = app()->environmentFilePath();
         if (!is_writable($envPath)) {
             $this->error("Cannot write to .env file: {$envPath}");
             return;
         }
+        $existing = Dotenv::createArrayBacked(app()->environmentPath(), app()->environmentFile())->load();
         $envContent = file_get_contents($envPath);
         $replacements = [
             'REGISTRY_JWT_KEY_PASS' => $this->pass ? $this->quoteEnv($this->pass) : '',
         ];
-        $replacements['REGISTRY_JWT_KEY_PATH'] = $this->quoteEnv($this->private);
-        $replacements['REGISTRY_JWT_CERT_PATH'] = $this->quoteEnv($this->cert);
+        if(isset($existing['REGISTRY_JWT_KEY_PATH']) && Str::startsWith($this->private, storage_path())) {
+            $replacements['REGISTRY_JWT_KEY_FILENAME'] = $this->quoteEnv(Str::after($this->private, storage_path()));
+        } else {
+            $replacements['REGISTRY_JWT_KEY_PATH'] = $this->quoteEnv($this->private);
+        }
+        if(isset($existing['REGISTRY_JWT_CERT_PATH']) && Str::startsWith($this->cert, storage_path())) {
+            $replacements['REGISTRY_JWT_CERT_FILENAME'] = $this->quoteEnv(Str::after($this->cert, storage_path()));
+        } else {
+            $replacements['REGISTRY_JWT_CERT_PATH'] = $this->quoteEnv($this->cert);
+        }
         foreach ($replacements as $key => $value) {
             $pattern = "/^{$key}=(.*)$/m";
             if (preg_match($pattern, $envContent)) {
