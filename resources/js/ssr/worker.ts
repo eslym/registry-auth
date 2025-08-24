@@ -16,7 +16,7 @@ parentPort!.on("message", async ({ id, page }: { id: string; page: Page }) => {
 					props: {
 						...props,
 						wrap: BaseLayout as any
-					},
+					}
 				});
 			}
 		}))!;

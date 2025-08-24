@@ -64,6 +64,20 @@ const states = new WeakMap<Worker, WorkerState>();
 
 const minWorkers = ensureInt(values.minWorkers as string, 1, 0);
 
+class WorkerError extends Error {
+	private _stack?: string;
+
+	get stack() {
+		return this._stack;
+	}
+
+	constructor(message: string, stack?: string) {
+		super(message);
+		this.name = "WorkerError";
+		this._stack = stack;
+	}
+}
+
 if (typeof minWorkers !== "number") {
 	if (minWorkers === INVALID) {
 		throw new Error(
@@ -126,10 +140,7 @@ function newWorker(): [Worker, WorkerState] {
 		if (msg.success) {
 			resolve(msg.result);
 		} else {
-			const err = new Error(msg.error.message);
-			if (msg.error.stack) {
-				err.stack = msg.error.stack;
-			}
+			const err = new WorkerError(msg.error.message, msg.error.stack);
 			reject(err);
 		}
 		if (state.requests.size === 0) {
@@ -176,6 +187,7 @@ setInterval(() => {
 
 createBunServer({
 	...(values as any),
+	showError: true,
 	render(page: Page) {
 		const [worker, state] = nextWorker();
 		const id = state.nexReqId++;

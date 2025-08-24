@@ -37,7 +37,10 @@
 	let Icon = $derived(dir === "asc" ? ArrowDownAZIcon : ArrowUpAZIcon);
 
 	function updateSort(field: string, dir: "asc" | "desc") {
-		const url = new URL(inertia.page.url, window.location.origin);
+		const url = new URL(
+			inertia.page.url,
+			import.meta.env.SSR ? undefined : window.location.origin
+		);
 		url.searchParams.set("sort", `${field},${dir}`);
 		url.searchParams.delete("page");
 		inertia.router.get(

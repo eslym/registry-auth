@@ -62,7 +62,7 @@
 	let action = $derived.by(() => {
 		const url = new URL(
 			inertia.page.url,
-			import.meta.env.SSR ? inertia.page.url : window.location.origin
+			import.meta.env.SSR ? undefined : window.location.origin
 		);
 		url.pathname = `/profile/${token.id ?? ""}`;
 		return url.toString();

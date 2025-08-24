@@ -69,7 +69,10 @@
 	let searching = false;
 
 	function viewUrl(id: number) {
-		const url = new URL(inertia.page.url, window.location.origin);
+		const url = new URL(
+			inertia.page.url,
+			import.meta.env.SSR ? undefined : window.location.origin
+		);
 		url.pathname = `/users/${id}`;
 		return url.toString();
 	}
@@ -77,7 +80,10 @@
 	function flushSearch() {
 		if (searching || search === (users.meta.filters.username ?? "")) return;
 		searching = true;
-		const url = new URL(inertia.page.url, window.location.origin);
+		const url = new URL(
+			inertia.page.url,
+			import.meta.env.SSR ? undefined : window.location.origin
+		);
 		if (search) {
 			url.searchParams.set("username", search);
 		} else {
@@ -252,7 +258,10 @@
 		editable={user.is_admin}
 		anonymous={currentView.username === null || user.id === currentView?.id}
 		onclose={() => {
-			const url = new URL(inertia.page.url, window.location.origin);
+			const url = new URL(
+				inertia.page.url,
+				import.meta.env.SSR ? undefined : window.location.origin
+			);
 			url.pathname = "/users";
 			inertia.router.replace({
 				url: url.toString(),
