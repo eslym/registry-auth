@@ -17,9 +17,9 @@ import BaseLayout from "@/layouts/base.svelte";
 				}
 			};
 			if (el!.dataset.serverRendered === "true") {
-				hydrate(App, opts);
+				hydrate(App, opts as any);
 			} else {
-				mount(App, opts);
+				mount(App, opts as any);
 			}
 		},
 		progress: false

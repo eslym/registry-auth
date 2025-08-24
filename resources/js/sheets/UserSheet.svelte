@@ -62,7 +62,10 @@
 	);
 
 	let action = $derived.by(() => {
-		const url = new URL(inertia.page.url, window.location.origin);
+		const url = new URL(
+			inertia.page.url,
+			import.meta.env.SSR ? inertia.page.url : window.location.origin
+		);
 		url.pathname = `/users/${user.id ?? ""}`;
 		return url.toString();
 	});

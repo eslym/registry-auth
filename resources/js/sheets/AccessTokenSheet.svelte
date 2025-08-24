@@ -10,11 +10,7 @@
 	import { ScrollArea } from "@/shadcn/ui/scroll-area";
 	import AccessControlEditor from "@/components/AccessControlEditor.svelte";
 	import LoadingButton from "@/components/LoadingButton.svelte";
-	import {
-		CalendarDate,
-		getLocalTimeZone,
-		today
-	} from "@internationalized/date";
+	import { CalendarDate, today } from "@internationalized/date";
 	import { Button, buttonVariants } from "@/shadcn/ui/button";
 	import { CalendarIcon } from "@lucide/svelte";
 	import { Config } from "@/lib/config";
@@ -60,11 +56,14 @@
 		};
 	}).transform(({ expired_at, ...data }) => ({
 		...data,
-		expired_at: expired_at?.toDate(getLocalTimeZone())
+		expired_at: expired_at?.toDate(config.timezone)
 	}));
 
 	let action = $derived.by(() => {
-		const url = new URL(inertia.page.url, window.location.origin);
+		const url = new URL(
+			inertia.page.url,
+			import.meta.env.SSR ? inertia.page.url : window.location.origin
+		);
 		url.pathname = `/profile/${token.id ?? ""}`;
 		return url.toString();
 	});
@@ -136,7 +135,7 @@
 					{#snippet renderCalendar(value: CalendarDate | undefined)}
 						<CalendarIcon />
 						{#if value}
-							{df.format(value.toDate(getLocalTimeZone()))}
+							{df.format(value.toDate(config.timezone))}
 						{:else}
 							Never
 						{/if}
@@ -160,7 +159,7 @@
 									type="single"
 									captionLayout="dropdown"
 									bind:value={form.data.expired_at}
-									minValue={today(getLocalTimeZone()).add({
+									minValue={today(config.timezone).add({
 										days: 1
 									})}
 								/>
