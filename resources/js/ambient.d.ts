@@ -86,8 +86,10 @@ declare global {
 
 		export interface AccessToken {
 			id: number;
+			is_refresh_token: boolean;
 			description: string;
 			last_used_at: string | null;
+			last_used_ip: string | null;
 			expired_at: string | null;
 			created_at: string;
 

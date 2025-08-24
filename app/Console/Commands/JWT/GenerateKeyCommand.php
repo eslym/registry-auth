@@ -205,12 +205,12 @@ class GenerateKeyCommand extends Command
         $replacements = [
             'REGISTRY_JWT_KEY_PASS' => $this->pass ? $this->quoteEnv($this->pass) : '',
         ];
-        if(isset($existing['REGISTRY_JWT_KEY_PATH']) && Str::startsWith($this->private, storage_path())) {
+        if(!isset($existing['REGISTRY_JWT_KEY_PATH']) && Str::startsWith($this->private, storage_path())) {
             $replacements['REGISTRY_JWT_KEY_FILENAME'] = $this->quoteEnv(Str::after($this->private, storage_path()));
         } else {
             $replacements['REGISTRY_JWT_KEY_PATH'] = $this->quoteEnv($this->private);
         }
-        if(isset($existing['REGISTRY_JWT_CERT_PATH']) && Str::startsWith($this->cert, storage_path())) {
+        if(!isset($existing['REGISTRY_JWT_CERT_PATH']) && Str::startsWith($this->cert, storage_path())) {
             $replacements['REGISTRY_JWT_CERT_FILENAME'] = $this->quoteEnv(Str::after($this->cert, storage_path()));
         } else {
             $replacements['REGISTRY_JWT_CERT_PATH'] = $this->quoteEnv($this->cert);

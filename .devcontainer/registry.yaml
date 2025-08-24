@@ -1,0 +1,30 @@
+version: 0.1
+
+log:
+  level: debug
+
+storage:
+  filesystem:
+    rootdirectory: /home/eslym/registry-auth/storage/app/registry
+  delete:
+    enabled: true
+  maintenance:
+    uploadpurging:
+      enabled: true
+      age: 24h
+      interval: 24h
+      dryrun: false
+
+http:
+  addr: 0.0.0.0:5000
+  secret: dev-secret-change-me
+  relativeurls: true
+  headers:
+    X-Content-Type-Options: [nosniff]
+
+auth:
+  token:
+    realm: http://localhost:8000/api/token
+    service: registry.local
+    issuer: registry.local
+    rootcertbundle: /home/eslym/registry-auth/storage/app/certs/ca.crt

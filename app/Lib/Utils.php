@@ -49,4 +49,13 @@ final class Utils
             Inertia::optional(fn() => Utils::clientConfig()) :
             fn() => Utils::clientConfig();
     }
+
+    public static function invoke(string $function, array $parameters = [], $default = null): Closure
+    {
+        return fn($instance)=>$instance?->{$function}(...$parameters) ?? $default;
+    }
+
+    public static function transform(callable $function, array $parameters = []): Closure {
+        return fn($instance)=>call_user_func_array($function, $parameters);
+    }
 }

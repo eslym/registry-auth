@@ -11,6 +11,7 @@ use App\Models\AccessToken;
 use App\Models\User;
 use App\Rules\AccessControlsRule;
 use App\Rules\PasswordMustDifferentRule;
+use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -27,9 +28,16 @@ class ProfileController extends Controller
         }
 
         $tokens = FilterBuilder::make()
-            ->sortable(['created_at', 'expires_at', 'description', 'used_at' => 'last_used_at'])
+            ->sortable(['created_at', 'expires_at', 'description', 'used_by' => 'last_used_ip', 'used_at' => 'last_used_at'])
             ->sortBy('created_at', 'desc')
-            ->withString('description', [FilterBuilder::class, 'filterStringContains'])
+            ->withString('search', function (Builder $query, string $keyword) {
+                $des = $query->qualifyColumn('description');
+                $ip = $query->qualifyColumn('last_used_ip');
+                $query->where(fn(Builder $query)=> $query
+                    ->whereRaw("LOCALE(?, $des) > 0", [$keyword])
+                    ->orWhereRaw("LOCALE(?, $ip) > 0", [$keyword])
+                );
+            })
             ->apply($user->access_tokens(), $request, $meta);
 
         $view = $token->exists ?
@@ -87,16 +95,13 @@ class ProfileController extends Controller
     public function createToken(Request $request)
     {
         $data = $request->validate([
-            'description' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string', 'min:2', 'max:255'],
             'expired_at' => ['nullable', 'date', 'after_or_equal:now'],
             'access_controls' => ['array', new AccessControlsRule()],
         ]);
 
-        $tokenStr = Str::random(32);
-
         $token = AccessToken::create([
             'user_id' => $request->user()->id,
-            'token' => $tokenStr,
             'description' => $data['description'],
             'expired_at' => ($data['expired_at'] ?? null) ?
                 Carbon::parse($data['expired_at'], $request->cookie('tz')) : null,
@@ -105,7 +110,7 @@ class ProfileController extends Controller
         AccessControl::syncWith($token, $data['access_controls'] ?? []);
 
         return redirect()->route('profile.index')
-            ->with('created', "$token->id|$tokenStr");
+            ->with('created', $token->getGeneratedToken());
     }
 
     public function revokeToken(AccessToken $token)

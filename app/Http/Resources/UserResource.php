@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Lib\Utils;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -23,8 +24,11 @@ class UserResource extends JsonResource
             'id' => $this->whenHas('id'),
             'username' => $this->whenHas('username'),
             'is_admin' => $this->whenHas('is_admin'),
-            'password_expired_at' => $this->whenHas('password_expired_at', fn($val) => $val?->toIso8601String()),
-            'created_at' => $this->whenHas('created_at', fn($val) => $val?->toIso8601String()),
+            'password_expired_at' => $this->whenHas('password_expired_at', Utils::invoke('toIso8601String')),
+
+            'created_at' => $this->whenHas('created_at', Utils::invoke('toIso8601String')),
+            'updated_at' => $this->whenHas('updated_at', Utils::invoke('toIso8601String')),
+
             'groups' => $this->whenLoaded('groups', fn() => GroupResource::collection($this->groups)),
             'access_controls' => $this->whenLoaded(
                 'access_controls',

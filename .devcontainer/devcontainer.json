@@ -3,7 +3,7 @@
 	"dockerComposeFile": ["../compose-dev.yaml"],
 	"service": "app",
 	"workspaceFolder": "/home/eslym/registry-auth",
-	"runServices": ["db"],
+	"runServices": ["db", "redis", "registry"],
 	"remoteUser": "eslym",
 	"customizations": {
 		"vscode": {

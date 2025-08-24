@@ -155,4 +155,18 @@ class User extends Authenticatable implements CanGrantRegistryAccess
     {
         return $this->username ?? '';
     }
+
+    /**
+     * @param string $remember_token
+     */
+    public function setRememberToken($remember_token): void
+    {
+        parent::setRememberToken($remember_token);
+
+        // invalidate all refresh tokens
+        $this->access_tokens()
+            ->where('is_refresh_token', true)
+            ->where(fn($query) => $query->whereNull('expired_at')->orWhere('expired_at', '>', now()))
+            ->update(['expired_at' => now()]);
+    }
 }

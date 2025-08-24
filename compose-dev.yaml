@@ -4,13 +4,14 @@ services:
       context: ./
       dockerfile: Dockerfile
       target: devcontainer
-    depends_on: [db]
+    depends_on: [db, redis]
     user: eslym
     hostname: dev-container
     command: bash -c "sleep infinity"
     working_dir: /home/eslym/registry-auth
     ports:
       - "8000:8000"
+      - "5000:5000"
       - "5173:5173"
     environment:
       DB_CONNECTION: mysql
@@ -21,12 +22,23 @@ services:
       DB_PASSWORD: root
       CACHE_STORE: redis
       REDIS_HOST: redis
+      REGISTRY_SERVICE: registry.local
+      REGISTRY_ISSUER: registry.local
+      REGISTRY_JWT_KEY_FILENAME: /app/certs/key.pem
+      REGISTRY_JWT_CERT_FILENAME: /app/certs/ca.crt
     volumes:
       - xdg_data:/home/eslym/.xdg
       - jetbrains:/.jbdevcontainer
       - ./:/home/eslym/registry-auth
     extra_hosts:
       - "host.docker.internal:host-gateway"
+  registry:
+    image: "registry:2"
+    command: registry serve /home/eslym/registry-auth/.devcontainer/registry.yaml
+    network_mode: "service:app"
+    user: "1000:1000"
+    volumes:
+      - "./:/home/eslym/registry-auth"
   db:
     image: "mariadb:10"
     environment:

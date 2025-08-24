@@ -21,6 +21,7 @@
 	import { EyeIcon, TrashIcon } from "@lucide/svelte";
 	import ConfirmDeleteDialog from "@/dialogs/ConfirmDeleteDialog.svelte";
 	import TokenCreatedDialog from "@/dialogs/TokenCreatedDialog.svelte";
+	import { Badge } from "@/shadcn/ui/badge";
 
 	const config = Config.get();
 
@@ -41,7 +42,7 @@
 		tokens: Paginated<
 			Model.AccessToken,
 			{
-				description: "string";
+				search: "string";
 			}
 		>;
 		user: Model.CurrentUser;
@@ -65,7 +66,7 @@
 		})
 	);
 
-	let search = $state("");
+	let search = $state(tokens.meta.filters.search ?? "");
 	let searching = false;
 
 	function viewUrl(id: number) {
@@ -75,14 +76,13 @@
 	}
 
 	function flushSearch() {
-		if (searching || search === (tokens.meta.filters.description ?? ""))
-			return;
+		if (searching || search === (tokens.meta.filters.search ?? "")) return;
 		searching = true;
 		const url = new URL(inertia.page.url, window.location.origin);
 		if (search) {
-			url.searchParams.set("description", search);
+			url.searchParams.set("search", search);
 		} else {
-			url.searchParams.delete("description");
+			url.searchParams.delete("search");
 		}
 		url.searchParams.delete("page");
 		inertia.router.get(
@@ -262,6 +262,7 @@
 					{ field: "description", label: "Description" },
 					{ field: "created_at", label: "Created At" },
 					{ field: "used_at", label: "Used At" },
+					{ field: "used_by", label: "Used By" },
 					{ field: "expired_at", label: "Expired At" }
 				]}
 				class="ml-auto w-40"
@@ -275,7 +276,10 @@
 				<Table.Row>
 					<Table.Head>Description</Table.Head>
 					<Table.Head class="w-0 text-center text-nowrap">
-						Last Used
+						Last Used At
+					</Table.Head>
+					<Table.Head class="w-0 text-center text-nowrap">
+						Last Used IP
 					</Table.Head>
 					<Table.Head class="w-0 text-center text-nowrap">
 						Expires
@@ -290,11 +294,28 @@
 				{#each tokens.items as token (token.id)}
 					<Table.Row>
 						<Table.Cell>
-							{token.description}
+							{#if token.is_refresh_token}
+								<Badge
+									variant="outline"
+									class="text-muted-foreground"
+									>refresh token</Badge
+								>
+							{:else}
+								{token.description}
+							{/if}
 						</Table.Cell>
 						<Table.Cell class="w-0 text-center text-nowrap">
 							{#if token.last_used_at}
 								{fromNow(new Date(token.last_used_at))}
+							{:else}
+								<span class="text-muted-foreground">Never</span>
+							{/if}
+						</Table.Cell>
+						<Table.Cell class="w-0 text-center text-nowrap">
+							{#if token.last_used_ip}
+								<span class="font-mono"
+									>{token.last_used_ip}</span
+								>
 							{:else}
 								<span class="text-muted-foreground">Never</span>
 							{/if}
@@ -309,23 +330,29 @@
 						<Table.Cell class="w-0 text-center text-nowrap">
 							{date.format(new Date(token.created_at))}
 						</Table.Cell>
-						<Table.Cell>
-							<a
-								href={viewUrl(token.id)}
-								use:inertia.link={{
-									replace: true,
-									preserveScroll: true
-								}}
-								class={buttonVariants({
-									variant: "secondary",
-									size: "icon"
-								})}
-							>
-								<EyeIcon />
-							</a>
+						<Table.Cell class="flex justify-end gap-2">
+							{#if !token.is_refresh_token}
+								<a
+									href={viewUrl(token.id)}
+									use:inertia.link={{
+										replace: true,
+										preserveScroll: true
+									}}
+									class={buttonVariants({
+										variant: "secondary",
+										size: "icon"
+									})}
+								>
+									<EyeIcon />
+								</a>
+							{/if}
 							<ConfirmDeleteDialog
-								title="Revoke Access Token"
-								description="Are you sure you want to revoke this access token? This action cannot be undone."
+								title="Revoke {token.is_refresh_token
+									? 'Refresh'
+									: 'Access'} Token"
+								description="Are you sure you want to revoke this {token.is_refresh_token
+									? 'refresh'
+									: 'access'} token? This action cannot be undone."
 								replace
 								preserveScroll
 								preserveState

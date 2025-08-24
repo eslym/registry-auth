@@ -13,7 +13,7 @@ use Illuminate\Support\Carbon;
  * @property string $owner_type
  * @property int|null $owner_id
  * @property int|null $group_id
- * @property string $repository
+ * @property string $rule
  * @property AccessLevel $access_level
  * @property int $sort_order
  * @property int|null $group_order

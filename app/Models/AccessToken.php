@@ -13,13 +13,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection as BaseCollection;
+use Illuminate\Support\Str;
 
 /**
  * @property int $id
  * @property string $token
+ * @property bool $is_refresh_token
  * @property int $user_id
  * @property string|null $description
  * @property Carbon|null $last_used_at
+ * @property string|null $last_used_ip
  * @property Carbon|null $expired_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -37,15 +40,30 @@ class AccessToken extends Model implements CanGrantRegistryAccess
         grantScope as protected grantScopeLocal;
     }
 
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function (AccessToken $token) {
+            if(!isset($token->attributes['token'])) {
+                $token->generatedToken = Str::random(32);
+                $token->token = $token->generatedToken;
+            }
+        });
+    }
+
     protected $fillable= [
+        'is_refresh_token',
         'token',
         'user_id',
         'description',
         'last_used_at',
+        'last_used_ip',
         'expired_at',
     ];
 
     protected $hidden = ['token'];
+
+    protected string|null $generatedToken = null;
 
     /**
      * @return BelongsTo<User, static>
@@ -67,12 +85,18 @@ class AccessToken extends Model implements CanGrantRegistryAccess
     public function casts(): array
     {
         return [
+            'is_refresh_token' => 'boolean',
             'token' => 'hashed',
             'last_used_at' => 'datetime',
             'expired_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
+    }
+
+    public function getGeneratedToken(): ?string
+    {
+        return "$this->id|$this->generatedToken";
     }
 
     public function canListCatalog(): bool

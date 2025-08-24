@@ -59,6 +59,7 @@ final class Token
 
         return [
             'token' => $jwt,
+            'access_token' => $jwt,
             'expires_in' => $ttl,
             'issued_at' => gmdate('c', $now),
         ];
