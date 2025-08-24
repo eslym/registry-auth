@@ -2,8 +2,8 @@
 
 namespace App\Models\Contracts;
 
+use App\Lib\Registry\Grant;
 use App\Models\AccessControl;
-use App\Registry\Grant;
 use Illuminate\Support\Collection;
 
 interface CanGrantRegistryAccess

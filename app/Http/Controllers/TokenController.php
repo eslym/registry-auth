@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Lib\Registry\ErrorCode;
+use App\Lib\Registry\Token;
 use App\Models\AccessToken;
 use App\Models\User;
-use App\Registry\ErrorCode;
-use App\Registry\Token;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Registry;
+namespace App\Lib\Registry;
 
 use InvalidArgumentException;
 use JsonSerializable;

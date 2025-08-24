@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-use App\Registry\Action;
+use App\Lib\Registry\Action;
 
 enum AccessLevel: string
 {

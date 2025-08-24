@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use App\Lib\Registry\Grant;
 use App\Models\Concerns\GrantRegistryToken;
 use App\Models\Contracts\CanGrantRegistryAccess;
-use App\Registry\Grant;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;

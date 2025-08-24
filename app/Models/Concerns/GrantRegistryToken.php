@@ -3,8 +3,8 @@
 namespace App\Models\Concerns;
 
 use App\Lib\ACLGlob;
-use App\Registry\Grant;
-use App\Registry\ResourceType;
+use App\Lib\Registry\Grant;
+use App\Lib\Registry\ResourceType;
 
 trait GrantRegistryToken
 {

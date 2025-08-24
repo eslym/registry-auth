@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Registry;
+namespace App\Lib\Registry;
 
 use Firebase\JWT\JWT;
 use Illuminate\Support\Str;
@@ -11,10 +11,10 @@ final class Token
     public static function issue(string $sub, array $access, ?string $aud = null): array
     {
         $now = time();
-        $ttl = (int)config('registry.ttl', 300);
+        $ttl = (int)config('registry.jwt.ttl', 300);
 
         $payload = [
-            'iss' => config('registry.issuer'),
+            'iss' => config('registry.jwt.issuer'),
             'sub' => $sub,
             'aud' => $aud ?? config('registry.service'),
             'nbf' => $now,
@@ -25,12 +25,12 @@ final class Token
         ];
 
         // Load private key (RSA or EC), with optional passphrase
-        $keyPath = config('registry.key.path', storage_path('registry.pem'));
+        $keyPath = config('registry.jwt.key.path', storage_path('app/certs/registry.pem'));
         if (!is_readable($keyPath)) {
             throw new RuntimeException("Private key not readable: {$keyPath}");
         }
         $pem = file_get_contents($keyPath);
-        $pass = config('registry.key.pass') ?: null;
+        $pass = config('registry.jwt.key.pass') ?: null;
 
         $pkey = openssl_pkey_get_private($pem, $pass);
         if (!$pkey) {
@@ -42,7 +42,7 @@ final class Token
 
         // Include x5c header so the registry can validate the token signer
         $headers = [];
-        $certPath = config('registry.key.cert', storage_path('registry.crt'));
+        $certPath = config('registry.jwt.key.cert', storage_path('app/certs/registry.crt'));
         if (is_readable($certPath)) {
             $certPem = file_get_contents($certPath) ?: '';
             $der = trim(str_replace(
@@ -73,10 +73,10 @@ final class Token
         }
         return match ($d['type']) {
             OPENSSL_KEYTYPE_RSA => 'RS256',
-            OPENSSL_KEYTYPE_EC  => match ($d['ec']['curve_name'] ?? '') {
+            OPENSSL_KEYTYPE_EC => match ($d['ec']['curve_name'] ?? '') {
                 'prime256v1', 'secp256r1' => 'ES256',
-                'secp384r1'               => 'ES384',
-                'secp521r1'               => 'ES512',
+                'secp384r1' => 'ES384',
+                'secp521r1' => 'ES512',
                 default => throw new RuntimeException('Unsupported EC curve for JWT'),
             },
             default => throw new RuntimeException('Unsupported key type'),
