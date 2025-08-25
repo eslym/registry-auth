@@ -24,7 +24,7 @@ class Token
      *                       e.g. [["type"=>"repository","name"=>"foo/bar","actions"=>["pull"]], ...]
      * @param int|null $ttlSeconds Override validity period (seconds)
      */
-    public static function issue(?string $subject = null, array $access, ?int $ttlSeconds = null): string
+    public static function issue(?string $subject, array $access, ?int $ttlSeconds = null): array
     {
         $now = time();
         $ttl = $ttlSeconds ?? (int) config('registry.jwt.ttl', 300);
@@ -50,8 +50,13 @@ class Token
 
         $alg    = CertificateService::alg();
 
-        // Encode (firebase/php-jwt v6 supports resource OpenSSLAsymmetricKey for $key)
-        return JWT::encode($claims, $pkey, $alg, null, $headers);
+        $jwt = JWT::encode($claims, $pkey, $alg, null, $headers);
+
+        return [
+            'token' => $jwt,
+            'expires_in' => $ttl,
+            'issued_at' => gmdate('c', $now),
+        ];
     }
 
     /** Build JOSE headers (alg implied by encode(); include kid + x5c if certs present) */

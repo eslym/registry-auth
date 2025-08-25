@@ -32,7 +32,7 @@ class IssueTokenCommand extends Command
 
         $access = array_map(fn($scope)=>Grant::parse(trim($scope)), $scopes);
         $token = Token::issue($subject, $access);
-        $this->line($token);
+        $this->line($token['token']);
 
         return self::SUCCESS;
     }
