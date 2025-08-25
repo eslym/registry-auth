@@ -24,8 +24,10 @@ services:
       REDIS_HOST: redis
       REGISTRY_SERVICE: registry.local
       REGISTRY_ISSUER: registry.local
-      REGISTRY_JWT_KEY_FILENAME: /app/certs/key.pem
-      REGISTRY_JWT_CERT_FILENAME: /app/certs/ca.crt
+      REGISTRY_JWT_KEY_FILENAME: app/certs/key.pem
+      REGISTRY_JWT_CERT_FILENAME: app/certs/ca.crt
+      REGISTRY_JWT_CA_KEY_FILENAME: app/certs/root.pem
+      REGISTRY_JWT_CA_CERT_FILENAME: app/certs/root.crt
     volumes:
       - xdg_data:/home/eslym/.xdg
       - jetbrains:/.jbdevcontainer

@@ -2,93 +2,67 @@
 
 namespace App\Lib\Registry;
 
+use App\Lib\Crypto\CertificateService;
 use Firebase\JWT\JWT;
 use Illuminate\Support\Str;
-use RuntimeException;
 
-final class Token
+/**
+ * Issues Docker Distribution-compatible JWTs using config('registry').
+ *
+ * - Signs with the configured leaf private key (supports passphrase/secret)
+ * - Adds JOSE headers: alg (from config), kid (from leaf cert), x5c ([leaf[, ca]])
+ * - Claims: iss, aud, iat, nbf, exp, jti, access (+ optional sub)
+ * - TTL defaults to config('registry.jwt.ttl')
+ */
+class Token
 {
-    public static function issue(string $sub, array $access, ?string $aud = null): array
+    /**
+     * Issue a token.
+     *
+     * @param string|null $subject Optional subject/username (sub claim)
+     * @param array $access  Array of scope objects per Distribution spec
+     *                       e.g. [["type"=>"repository","name"=>"foo/bar","actions"=>["pull"]], ...]
+     * @param int|null $ttlSeconds Override validity period (seconds)
+     */
+    public static function issue(?string $subject = null, array $access, ?int $ttlSeconds = null): string
     {
         $now = time();
-        $ttl = (int)config('registry.jwt.ttl', 300);
+        $ttl = $ttlSeconds ?? (int) config('registry.jwt.ttl', 300);
 
-        $payload = [
-            'iss' => config('registry.jwt.issuer'),
-            'sub' => $sub,
-            'aud' => $aud ?? config('registry.service'),
-            'nbf' => $now,
-            'iat' => $now,
-            'exp' => $now + $ttl,
-            'jti' => (string)Str::uuid(),
-            'access' => array_values($access),
+        $claims = [
+            'sub'    => $subject ?? '', // empty string when anonymous
+            'iss'    => (string) config('registry.jwt.issuer', 'registry_token_issuer'),
+            'aud'    => (string) config('registry.service', 'container_registry'),
+            'iat'    => $now,
+            'nbf'    => $now - 1,
+            'exp'    => $now + max(1, $ttl),
+            'jti'    => Str::uuid()->toString(),
+            'access' => $access,
         ];
 
-        // Load private key (RSA or EC), with optional passphrase
-        $keyPath = config('registry.jwt.key.path', storage_path('app/certs/registry.pem'));
-        if (!is_readable($keyPath)) {
-            throw new RuntimeException("Private key not readable: {$keyPath}");
-        }
-        $pem = file_get_contents($keyPath);
-        $pass = config('registry.jwt.key.pass') ?: null;
+        // Prepare JOSE headers
+        $headers = static::buildJoseHeaders();
 
-        $pkey = openssl_pkey_get_private($pem, $pass);
-        if (!$pkey) {
-            throw new RuntimeException('Invalid private key: ' . implode(' | ', self::opensslErrors()));
-        }
+        // Load private key (resource) — supports passphrase-protected keys
+        $keyPem = CertificateService::readFileOrFail(CertificateService::leafKeyPath());
+        $pass   = CertificateService::leafPassphrase();
+        $pkey   = CertificateService::openPrivateKey($keyPem, $pass);
 
-        // Choose alg based on key type
-        $alg = self::algForKey($pkey); // RS256 for RSA, ES256 for EC
+        $alg    = CertificateService::alg();
 
-        // Include x5c header so the registry can validate the token signer
+        // Encode (firebase/php-jwt v6 supports resource OpenSSLAsymmetricKey for $key)
+        return JWT::encode($claims, $pkey, $alg, null, $headers);
+    }
+
+    /** Build JOSE headers (alg implied by encode(); include kid + x5c if certs present) */
+    private static  function buildJoseHeaders(): array
+    {
         $headers = [];
-        $certPath = config('registry.jwt.key.cert', storage_path('app/certs/registry.crt'));
-        if (is_readable($certPath)) {
-            $certPem = file_get_contents($certPath) ?: '';
-            $der = trim(str_replace(
-                ["-----BEGIN CERTIFICATE-----", "-----END CERTIFICATE-----", "\r", "\n", " "],
-                '',
-                $certPem
-            ));
-            if ($der !== '') {
-                $headers['x5c'] = [$der]; // leaf first; self-signed → single element
-            }
-        }
 
-        $jwt = JWT::encode($payload, $pkey, $alg, null, $headers);
+        $leafCertPath = CertificateService::leafCertPath();
+        $leafPem = CertificateService::readFileOrFail($leafCertPath);
+        $headers['x5c'] = CertificateService::buildX5C($leafPem);
 
-        return [
-            'token' => $jwt,
-            'access_token' => $jwt,
-            'expires_in' => $ttl,
-            'issued_at' => gmdate('c', $now),
-        ];
-    }
-
-    private static function algForKey($pkey): string
-    {
-        $d = openssl_pkey_get_details($pkey);
-        if (!$d || !isset($d['type'])) {
-            throw new RuntimeException('Unknown key type');
-        }
-        return match ($d['type']) {
-            OPENSSL_KEYTYPE_RSA => 'RS256',
-            OPENSSL_KEYTYPE_EC => match ($d['ec']['curve_name'] ?? '') {
-                'prime256v1', 'secp256r1' => 'ES256',
-                'secp384r1' => 'ES384',
-                'secp521r1' => 'ES512',
-                default => throw new RuntimeException('Unsupported EC curve for JWT'),
-            },
-            default => throw new RuntimeException('Unsupported key type'),
-        };
-    }
-
-    private static function opensslErrors(): array
-    {
-        $out = [];
-        while ($e = openssl_error_string()) {
-            $out[] = $e;
-        }
-        return $out;
+        return $headers;
     }
 }

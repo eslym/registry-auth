@@ -27,4 +27,4 @@ auth:
     realm: http://localhost:8000/api/token
     service: registry.local
     issuer: registry.local
-    rootcertbundle: /home/eslym/registry-auth/storage/app/certs/ca.crt
+    rootcertbundle: /home/eslym/registry-auth/storage/app/certs/root.crt

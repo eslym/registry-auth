@@ -18,20 +18,21 @@ return [
             // Key type: RSA or EC, must match the algorithm
             'type' => env('REGISTRY_JWT_KEY_TYPE', 'RSA'),
             'size' => (int)env('REGISTRY_JWT_KEY_SIZE', 4096),
-            'curve' => env('REGISTRY_JWT_KEY_CURVE', 'P-521'),
+            'curve' => env('REGISTRY_JWT_KEY_CURVE', 'prime256v1'),
 
             'path' => env('REGISTRY_JWT_KEY_PATH', storage_path(env('REGISTRY_JWT_KEY_FILENAME', 'app/certs/registry.pem'))),
             'pass' => env('REGISTRY_JWT_KEY_PASS'),
-            'pass_secret' => env('REGISTRY_JWT_KEY_PASS_SECRET'),
+            'pass_secret' => env('REGISTRY_JWT_KEY_PASS_SECRET', false),
             'cert' => env('REGISTRY_JWT_CERT_PATH', storage_path(env('REGISTRY_JWT_CERT_FILENAME', 'app/certs/registry.crt'))),
             'ttl' => (int)env('REGISTRY_JWT_CERT_TTL', 365),
         ],
         'stable_ca' => [
             'enabled' => (bool)env('REGISTRY_JWT_CA_ENABLED', false),
+            'rotate_leaf' => env('REGISTRY_JWT_CA_ROTATE_LEAF_CRON', false),
             'key' => env('REGISTRY_JWT_CA_KEY_PATH', storage_path(env('REGISTRY_JWT_CA_KEY_FILENAME', 'app/certs/registry-ca.pem'))),
             'cert' => env('REGISTRY_JWT_CA_CERT_PATH', storage_path(env('REGISTRY_JWT_CA_CERT_FILENAME', 'app/certs/registry-ca.crt'))),
             'pass' => env('REGISTRY_JWT_CA_KEY_PASS'),
-            'pass_secret' => env('REGISTRY_JWT_CA_KEY_PASS_SECRET'),
+            'pass_secret' => env('REGISTRY_JWT_CA_KEY_PASS_SECRET', false),
             'ttl' => (int)env('REGISTRY_JWT_CA_CERT_TTL', 3650),
         ],
     ]

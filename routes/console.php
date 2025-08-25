@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use \Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+if(config('jwt-auth.enabled') && ($cron = config('registry.jwt.stable_ca.rotate_leaf'))) {
+    Schedule::command('jwt:key', ['--force'])
+        ->cron($cron);
+}
