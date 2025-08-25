@@ -28,7 +28,7 @@ class Grant implements JsonSerializable
 
     public function isCatalog(): bool
     {
-        return $this->type === ResourceType::REGISTRY && $this->name === 'catalog' && $this->actions == ['*'];
+        return $this->type === ResourceType::REGISTRY && $this->name === 'catalog' && $this->actions == [Action::ANY];
     }
 
     public static function parse(string $scope): static
