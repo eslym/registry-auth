@@ -10,6 +10,7 @@
 	import FormErrors from "@/components/FormErrors.svelte";
 	import { Switch } from "@/shadcn/ui/switch";
 	import LoadingButton from "@/components/LoadingButton.svelte";
+	import FavIcon from "@/components/FavIcon.svelte";
 
 	const config = Config.get();
 
@@ -33,11 +34,11 @@
 </svelte:head>
 
 <div
-	class="flex h-dvh w-full items-center justify-center bg-gradient-to-br from-white/20 via-violet-500/20 to-blue-500/20"
+	class="from-destructive-foreground/50 via-accent/50 to-background/50 flex h-dvh w-full items-center justify-center bg-gradient-to-br"
 >
 	<Card.Root class="w-full max-w-80">
 		<div class="flex flex-row items-center gap-4 px-6">
-			<img alt="logo" src="/favicon.svg" class="h-12 w-12" />
+			<FavIcon class="size-12"/>
 			<Card.Header class="grow px-0">
 				<Card.Title>Login</Card.Title>
 				<Card.Description>{config.appName}</Card.Description>

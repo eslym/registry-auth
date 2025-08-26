@@ -380,7 +380,7 @@
 				{:else}
 					<Table.Row>
 						<Table.Cell
-							colspan={5}
+							colspan={6}
 							class="text-center h-20 text-muted-foreground"
 						>
 							No records.

@@ -17,8 +17,8 @@
 	} from "@lucide/svelte";
 	import { theme } from "@/lib/theme.svelte";
 	import ConfirmLogoutDialog from "@/dialogs/ConfirmLogoutDialog.svelte";
-	import UpdatePasswordDialog from "@/dialogs/UpdatePasswordDialog.svelte";
 	import { ScrollArea } from "@/shadcn/ui/scroll-area";
+	import FavIcon from "@/components/FavIcon.svelte";
 
 	const config = Config.get();
 	const inertia = useInertia();
@@ -45,7 +45,7 @@
 			<nav>
 				<ul class="flex flex-row items-center gap-1 max-sm:gap-0.5">
 					<li class="mr-2 flex items-center">
-						<img src="/favicon.svg" class="size-9" alt="logo" />
+						<FavIcon class="size-9"/>
 						<span class="ml-2 text-lg font-semibold max-sm:sr-only">
 							{config.appName}
 						</span>
@@ -54,11 +54,7 @@
 						<a
 							href="/users"
 							class={buttonVariants({
-								variant: "ghost",
-								class: [
-									route?.startsWith("users.") &&
-										"text-primary/90 hover:text-primary"
-								]
+								variant: route?.startsWith("users.") ? "secondary" : "ghost",
 							})}
 							use:inertia.link
 						>
@@ -70,11 +66,7 @@
 						<a
 							href="/groups"
 							class={buttonVariants({
-								variant: "ghost",
-								class: [
-									route?.startsWith("groups.") &&
-										"text-primary/90 hover:text-primary"
-								]
+								variant: route?.startsWith("groups.") ? "secondary" : "ghost",
 							})}
 							use:inertia.link
 						>
@@ -89,12 +81,8 @@
 						<a
 							href="/profile"
 							class={buttonVariants({
-								variant: "ghost",
+								variant: route?.startsWith("profile.") ? "secondary" : "ghost",
 								size: "icon",
-								class: [
-									route?.startsWith("profile.") &&
-										"text-primary/90 hover:text-primary"
-								]
 							})}
 							use:inertia.link
 						>
