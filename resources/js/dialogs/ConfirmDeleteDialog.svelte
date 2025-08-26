@@ -10,7 +10,7 @@
 		children = undefined,
 		title = "Confirm Delete",
 		description = "Are you sure you want to delete this item? This action cannot be undone.",
-		opts
+		...opts
 	}: {
 		url: string | URL;
 		open?: boolean;
@@ -40,6 +40,7 @@
 		<form
 			action={url.toString()}
 			use:form.action={{
+				...opts,
 				method: "delete",
 				onFinish() {
 					open = false;
@@ -58,7 +59,7 @@
 					Cancel
 				</AlertDialog.Cancel>
 				<AlertDialog.Action>
-					{#snippet child({ props })}
+					{#snippet child({ props: { class: _, ...props } })}
 						<LoadingButton
 							{...props}
 							variant="destructive"
