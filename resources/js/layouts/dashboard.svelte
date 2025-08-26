@@ -45,8 +45,8 @@
 			<nav>
 				<ul class="flex flex-row items-center gap-1 max-sm:gap-0.5">
 					<li class="mr-2 flex items-center">
-						<FavIcon class="size-9"/>
-						<span class="ml-2 text-lg font-semibold max-sm:sr-only">
+						<FavIcon class="h-12 w-10 object-cover"/>
+						<span class="ml-1 text-lg font-semibold max-sm:sr-only">
 							{config.appName}
 						</span>
 					</li>

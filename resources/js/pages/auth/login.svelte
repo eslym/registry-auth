@@ -36,9 +36,9 @@
 <div
 	class="from-destructive-foreground/50 via-accent/50 to-background/50 flex h-dvh w-full items-center justify-center bg-gradient-to-br"
 >
-	<Card.Root class="w-full max-w-80">
-		<div class="flex flex-row items-center gap-4 px-6">
-			<FavIcon class="size-12"/>
+	<FavIcon class="w-full h-full -z-10 absolute opacity-40"/>
+	<Card.Root class="w-full max-w-80 bg-card/65 backdrop-blur-sm">
+		<div class="flex flex-row items-center gap-2 px-6">
 			<Card.Header class="grow px-0">
 				<Card.Title>Login</Card.Title>
 				<Card.Description>{config.appName}</Card.Description>
