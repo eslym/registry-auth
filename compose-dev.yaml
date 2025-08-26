@@ -29,8 +29,6 @@ services:
       REGISTRY_JWT_CA_KEY_FILENAME: app/certs/root.pem
       REGISTRY_JWT_CA_CERT_FILENAME: app/certs/root.crt
     volumes:
-      - xdg_data:/home/eslym/.xdg
-      - jetbrains:/.jbdevcontainer
       - ./:/home/eslym/registry-auth
     extra_hosts:
       - "host.docker.internal:host-gateway"

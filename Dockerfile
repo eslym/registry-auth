@@ -1,7 +1,7 @@
 ARG FRANKENPHP_VERSION=1.9.0
 ARG PHP_VERSION=8.2.29
-ARG COMPOSER_VERSION=2.8.10
-ARG BUN_VERSION=1.2.20
+ARG COMPOSER_VERSION=2.8.11
+ARG BUN_VERSION=1.2.21
 ARG STACKER_VERSION=1.1.3
 
 FROM composer:${COMPOSER_VERSION} AS composer
@@ -64,16 +64,7 @@ COPY --from=stacker /usr/local/bin/stacker /usr/local/bin/stacker
 WORKDIR /home/eslym
 USER eslym
 
-ARG XDG_CACHE_HOME=/home/eslym/.xdg/cache
-ARG XDG_CONFIG_HOME=/home/eslym/.xdg/config
-ARG XDG_DATA_HOME=/home/eslym/.xdg/data
-
-RUN git config --global --add safe.directory /home/eslym/registry-auth &&\
-    sudo ln -s /usr/local/bin/bun /usr/local/bin/bunx &&\
-    mkdir -p ${XDG_CACHE_HOME} ${XDG_CONFIG_HOME} ${XDG_DATA_HOME} &&\
-    echo "export XDG_CACHE_HOME=\${HOME}/.xdg/cache" >> /home/eslym/.bashrc &&\
-    echo "export XDG_CONFIG_HOME=\${HOME}/.xdg/config" >> /home/eslym/.bashrc &&\
-    echo "export XDG_DATA_HOME=\${HOME}/.xdg/data" >> /home/eslym/.bashrc &&\
+RUN sudo ln -s /usr/local/bin/bun /usr/local/bin/bunx &&\
     curl -fsSL https://deb.nodesource.com/setup_23.x -o /tmp/nodesource_setup.sh &&\
     sudo chmod +x /tmp/nodesource_setup.sh &&\
     sudo bash -E /tmp/nodesource_setup.sh &&\
