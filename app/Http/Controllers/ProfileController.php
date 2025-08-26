@@ -97,7 +97,7 @@ class ProfileController extends Controller
         $data = $request->validate([
             'description' => ['required', 'string', 'min:2', 'max:255'],
             'expired_at' => ['nullable', 'date', 'after_or_equal:now'],
-            'access_controls' => ['array', new AccessControlsRule()],
+            'access_controls' => ['array', 'min:1', new AccessControlsRule()],
         ]);
 
         $token = AccessToken::create([
@@ -119,6 +119,7 @@ class ProfileController extends Controller
             abort(404);
         }
 
+        $token->access_controls()->delete();
         $token->delete();
 
         return redirect()->back()
