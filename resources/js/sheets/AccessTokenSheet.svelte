@@ -185,6 +185,7 @@
 						{editable}
 						class="h-120 rounded-md border"
 					/>
+					<FormErrors errors={form.errors.access_controls} />
 				</div>
 			</form>
 		</ScrollArea>

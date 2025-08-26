@@ -211,6 +211,7 @@ class UserController extends Controller
                     )
                 );
         }
+        $user->access_controls()->delete();
         $user->delete();
         return redirect()->back()
             ->with('toast',

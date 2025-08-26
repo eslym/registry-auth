@@ -37,6 +37,7 @@ return new class extends Migration {
             ->orderBy('sort_order');
         $view = $grammar->wrapTable('user_acls');
         $sql = $query->toSql();
+        DB::statement("DROP VIEW IF EXISTS $view");
         DB::statement("CREATE VIEW $view AS $sql;");
     }
 

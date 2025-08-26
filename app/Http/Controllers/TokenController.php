@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AccessLevel;
 use App\Lib\Registry\ErrorCode;
 use App\Lib\Registry\Token;
+use App\Models\AccessControl;
 use App\Models\AccessToken;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -62,6 +64,13 @@ class TokenController extends Controller
                         'expired_at' => $user->password_expired_at,
                         'is_refresh_token' => true,
                         'last_used_ip' => $request->ip(),
+                    ]);
+                    AccessControl::create([
+                        'owner_type' => $token->getMorphClass(),
+                        'owner_id' => $token->getKey(),
+                        'rule' => '**',
+                        'access_level' => AccessLevel::FULL,
+                        'sort_order' => 0,
                     ]);
                     $refreshToken = $token->getGeneratedToken();
                 }

@@ -105,6 +105,7 @@ class GroupController extends Controller
                 );
         }
 
+        $group->access_controls()->delete();
         $group->delete();
 
         return redirect()->back()

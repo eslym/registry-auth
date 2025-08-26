@@ -7,11 +7,13 @@
 	import { Separator } from "@/shadcn/ui/separator";
 	import { Config } from "@/lib/config";
 	import {
+		BoxesIcon,
 		UsersIcon,
 		GroupIcon,
 		SunMoonIcon,
 		SunIcon,
 		MoonIcon,
+		LogInIcon,
 		LogOutIcon,
 		UserRoundCogIcon
 	} from "@lucide/svelte";
@@ -27,7 +29,7 @@
 		children,
 		user,
 		route
-	}: { children: Snippet; user: Model.CurrentUser; route?: string } =
+	}: { children: Snippet; user: Model.CurrentUser | null; route?: string } =
 		$props();
 
 	const icons = {
@@ -45,66 +47,103 @@
 			<nav>
 				<ul class="flex flex-row items-center gap-1 max-sm:gap-0.5">
 					<li class="mr-2 flex items-center">
-						<FavIcon class="h-12 w-10 object-cover"/>
+						<FavIcon class="h-12 w-10 object-cover" />
 						<span class="ml-1 text-lg font-semibold max-sm:sr-only">
 							{config.appName}
 						</span>
 					</li>
 					<li class="ml-auto">
 						<a
-							href="/users"
+							href="/"
 							class={buttonVariants({
-								variant: route?.startsWith("users.") ? "secondary" : "ghost",
+								variant: route?.startsWith("images.")
+									? "secondary"
+									: "ghost"
 							})}
 							use:inertia.link
 						>
-							<span class="max-sm:sr-only">Users</span>
-							<UsersIcon />
+							<span class="max-sm:sr-only">Images</span>
+							<BoxesIcon />
 						</a>
 					</li>
-					<li>
+					{#if user}
+						<li>
+							<a
+								href="/users"
+								class={buttonVariants({
+									variant: route?.startsWith("users.")
+										? "secondary"
+										: "ghost"
+								})}
+								use:inertia.link
+							>
+								<span class="max-sm:sr-only">Users</span>
+								<UsersIcon />
+							</a>
+						</li>
+						<li>
+							<a
+								href="/groups"
+								class={buttonVariants({
+									variant: route?.startsWith("groups.")
+										? "secondary"
+										: "ghost"
+								})}
+								use:inertia.link
+							>
+								<span class="max-sm:sr-only">Groups</span>
+								<GroupIcon />
+							</a>
+						</li>
+						<li class="flex items-center self-stretch">
+							<Separator orientation="vertical" class="!h-6/10" />
+						</li>
+						<li>
+							<a
+								href="/profile"
+								class={buttonVariants({
+									variant: route?.startsWith("profile.")
+										? "secondary"
+										: "ghost",
+									size: "icon"
+								})}
+								use:inertia.link
+							>
+								<span class="sr-only">User Profile</span>
+								<UserRoundCogIcon />
+							</a>
+						</li>
+						<li>
+							<ConfirmLogoutDialog>
+								{#snippet children({ Trigger })}
+									<Trigger
+										class={buttonVariants({
+											variant: "ghost",
+											size: "icon"
+										})}
+									>
+										<LogOutIcon />
+										<span class="sr-only">Logout</span>
+									</Trigger>
+								{/snippet}
+							</ConfirmLogoutDialog>
+						</li>
+					{:else}
+						<li class="flex items-center self-stretch">
+							<Separator orientation="vertical" class="!h-6/10" />
+						</li>
 						<a
-							href="/groups"
+							href="/login"
 							class={buttonVariants({
-								variant: route?.startsWith("groups.") ? "secondary" : "ghost",
-							})}
+									variant: "ghost",
+									size: "icon"
+								})}
 							use:inertia.link
 						>
-							<span class="max-sm:sr-only">Groups</span>
-							<GroupIcon />
+							<span class="sr-only">Login</span>
+							<LogInIcon />
 						</a>
-					</li>
-					<li class="flex items-center self-stretch">
-						<Separator orientation="vertical" class="!h-6/10" />
-					</li>
-					<li>
-						<a
-							href="/profile"
-							class={buttonVariants({
-								variant: route?.startsWith("profile.") ? "secondary" : "ghost",
-								size: "icon",
-							})}
-							use:inertia.link
-						>
-							<span class="sr-only">User Profile</span>
-							<UserRoundCogIcon />
-						</a>
-					</li>
-					<li>
-						<ConfirmLogoutDialog>
-							{#snippet children({ Trigger })}
-								<Trigger
-									class={buttonVariants({
-										variant: "ghost",
-										size: "icon"
-									})}
-								>
-									<LogOutIcon />
-									<span class="sr-only">Logout</span>
-								</Trigger>
-							{/snippet}
-						</ConfirmLogoutDialog>
-					</li>
+					{/if}
 					<li class="flex items-center self-stretch">
 						<Separator orientation="vertical" class="!h-6/10" />
 					</li>
@@ -149,4 +188,6 @@
 	</div>
 </ScrollArea>
 
-<PasswordExpiredDialog bind:open={user.password_expired} />
+{#if user}
+	<PasswordExpiredDialog bind:open={user.password_expired} />
+{/if}
