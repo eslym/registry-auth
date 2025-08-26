@@ -11,7 +11,6 @@ services:
     working_dir: /home/eslym/registry-auth
     ports:
       - "8000:8000"
-      - "5000:5000"
       - "5173:5173"
     environment:
       DB_CONNECTION: mysql
@@ -34,8 +33,9 @@ services:
       - "host.docker.internal:host-gateway"
   registry:
     image: "registry:2"
+    ports:
+      - "5000:5000"
     command: registry serve /home/eslym/registry-auth/.devcontainer/registry.yaml
-    network_mode: "service:app"
     user: "1000:1000"
     volumes:
       - "./:/home/eslym/registry-auth"
