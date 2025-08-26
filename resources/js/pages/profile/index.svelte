@@ -350,6 +350,7 @@
 									})}
 								>
 									<EyeIcon />
+									<span class="sr-only">View</span>
 								</a>
 							{/if}
 							<ConfirmDeleteDialog
@@ -372,6 +373,7 @@
 										})}
 									>
 										<TrashIcon />
+										<span class="sr-only">Revoke</span>
 									</Trigger>
 								{/snippet}
 							</ConfirmDeleteDialog>

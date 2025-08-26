@@ -31,6 +31,7 @@
 
 <svelte:head>
 	<title>Login | {config.appName}</title>
+	<meta name="description" content="Sign-in into {config.appName}"/>
 </svelte:head>
 
 <div
@@ -46,6 +47,7 @@
 					<Select.Root type="single" bind:value={theme.user}>
 						<Select.Trigger>
 							<Icon />
+							<span class="sr-only">Theme</span>
 						</Select.Trigger>
 						<Select.Content>
 							<Select.Item value="system">
