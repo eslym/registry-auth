@@ -24,6 +24,7 @@ class CurrentUserResource extends JsonResource
             'username' => $this->username,
             'is_admin' => $this->is_admin,
             'password_expired' => $this->password_expired,
+            'access_controls' => AccessControlResource::collection($this->all_access_controls),
         ];
     }
 }

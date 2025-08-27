@@ -8,6 +8,7 @@ use App\Models\Contracts\CanGrantRegistryAccess;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -36,6 +37,7 @@ use Illuminate\Support\Str;
  */
 class AccessToken extends Model implements CanGrantRegistryAccess
 {
+    use MassPrunable;
     use GrantRegistryToken {
         grantScope as protected grantScopeLocal;
     }
@@ -44,14 +46,14 @@ class AccessToken extends Model implements CanGrantRegistryAccess
     {
         parent::boot();
         static::creating(function (AccessToken $token) {
-            if(!isset($token->attributes['token'])) {
+            if (!isset($token->attributes['token'])) {
                 $token->generatedToken = Str::random(32);
                 $token->token = $token->generatedToken;
             }
         });
     }
 
-    protected $fillable= [
+    protected $fillable = [
         'is_refresh_token',
         'token',
         'user_id',
@@ -121,8 +123,14 @@ class AccessToken extends Model implements CanGrantRegistryAccess
         return $this->access_controls;
     }
 
-    function getUsername(): string
+    public function getUsername(): string
     {
         return $this->user->getUsername();
+    }
+
+    public function prunable(): Builder
+    {
+        return static::whereNotNull('expired_at')
+            ->where('expired_at', '<=', now()->subDays(90));
     }
 }

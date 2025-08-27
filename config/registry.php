@@ -1,10 +1,18 @@
 <?php
 
+use Illuminate\Support\Str;
+
+$host = env('REGISTRY_HOST', 'localhost:5000');
+$insecure = Str::startsWith($host, ['localhost', '127.']);
+
 return [
     // Allow anonymous access to the catalog endpoint
     'anonymous_catalog' => (bool)env('REGISTRY_ANONYMOUS_CATALOG', false),
 
     'service' => env('REGISTRY_SERVICE', 'container_registry'),
+
+    'host' => $host,
+    'endpoint' => env('REGISTRY_ENDPOINT', ($insecure ? 'http://' : 'https://') . $host),
 
     // JWT configuration
     'jwt' => [
@@ -35,5 +43,10 @@ return [
             'pass_secret' => env('REGISTRY_JWT_CA_KEY_PASS_SECRET', false),
             'ttl' => (int)env('REGISTRY_JWT_CA_CERT_TTL', 3650),
         ],
-    ]
+    ],
+
+    'storage' => [
+        'enabled' => (bool)env('REGISTRY_STORAGE_ENABLED', false),
+        'disk' => 'registry-' . env('REGISTRY_STORAGE_DISK', 'local'),
+    ],
 ];

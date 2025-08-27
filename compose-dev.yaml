@@ -21,6 +21,8 @@ services:
       DB_PASSWORD: root
       CACHE_STORE: redis
       REDIS_HOST: redis
+      REGISTRY_HOST: localhost:5000
+      REGISTRY_ENDPOINT: http://registry:5000
       REGISTRY_SERVICE: registry.local
       REGISTRY_ISSUER: registry.local
       REGISTRY_JWT_KEY_FILENAME: app/certs/key.pem

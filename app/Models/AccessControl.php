@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\AccessLevel;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Arr;
@@ -30,6 +31,8 @@ use Throwable;
  */
 class AccessControl extends Model
 {
+    use MassPrunable;
+
     protected $table = 'access_controls';
 
     protected $fillable = [
@@ -121,5 +124,10 @@ class AccessControl extends Model
             DB::rollBack();
             throw $e;
         }
+    }
+
+    public function prunable(): Builder
+    {
+        return static::whereDoesntHaveMorph('owner', [User::class, Group::class, AccessToken::class]);
     }
 }

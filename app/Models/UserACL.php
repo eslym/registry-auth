@@ -46,4 +46,10 @@ class UserACL extends AccessControl
     {
         return $this->belongsTo(Group::class, 'group_id', 'id');
     }
+
+    protected function isPrunable(): bool
+    {
+        // this is a view, which is never prunable
+        return false;
+    }
 }

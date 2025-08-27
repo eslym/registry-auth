@@ -4,6 +4,7 @@ namespace App\Lib\Registry;
 
 use App\Lib\Crypto\CertificateService;
 use Firebase\JWT\JWT;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 /**
@@ -58,6 +59,24 @@ class Token
             'expires_in' => $ttl,
             'issued_at' => gmdate('c', $now),
         ];
+    }
+
+    public static function cachedServiceToken(?string $subject, string $scope, ?int $ttlSeconds = null): string
+    {
+        $key = "token:service:$subject:$scope";
+        $grant = Grant::parse($scope);
+
+        if (Cache::has($key)) {
+            return Cache::get($key);
+        }
+
+        $tokenData = static::issue($subject, [$grant], $ttlSeconds);
+
+        $ttl = $tokenData['ttl'];
+
+        Cache::put($key, $tokenData['token'], $ttl - 10);
+
+        return $tokenData['token'];
     }
 
     /** Build JOSE headers (alg implied by encode(); include kid + x5c if certs present) */
