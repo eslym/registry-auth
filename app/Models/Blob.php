@@ -1,17 +1,16 @@
 <?php
 
-namespace App\Models\Registry;
+namespace App\Models;
 
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 
 /**
  * @property string $digest
  * @property int $size
- * @property string|null $created_at
- * @property string|null $updated_at
+ * @property int|null $created_at
+ * @property int|null $updated_at
  * @method static Builder<static>|Blob newModelQuery()
  * @method static Builder<static>|Blob newQuery()
  * @method static Builder<static>|Blob query()
@@ -30,6 +29,14 @@ class Blob extends Model
 
     // disable touching timestamps
     public $timestamps = false;
+
+    protected function casts(): array
+    {
+        return [
+            'created_at' => 'timestamp',
+            'updated_at' => 'timestamp',
+        ];
+    }
 
     public function getKeyName(): string
     {

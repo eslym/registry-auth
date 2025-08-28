@@ -11,13 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('manifest_layer', function (Blueprint $table) {
-            $table->string('manifest_digest')
+        Schema::create('repository_manifest', function (Blueprint $table) {
+            $table->string('repository')
+                ->references('name')
+                ->on('repositories')
+                ->onDelete('cascade');
+            $table->string('digest')
                 ->references('digest')
                 ->on('manifests')
                 ->onDelete('cascade');
-            $table->string('blob_digest');
-            $table->unsignedInteger('layer_index');
+
+            $table->primary(['repository', 'digest']);
         });
     }
 
@@ -26,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('manifest_layer');
+        Schema::dropIfExists('repository_manifest');
     }
 };

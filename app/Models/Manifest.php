@@ -1,18 +1,18 @@
 <?php
 
-namespace App\Models\Registry;
+namespace App\Models;
 
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 
 /**
  * @property string $digest
  * @property string $media_type
  * @property int|null $total_size
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
+ * @property array<array-key, mixed>|null $annotations
+ * @property int|null $created_at
+ * @property int|null $updated_at
  * @method static Builder<static>|Manifest newModelQuery()
  * @method static Builder<static>|Manifest newQuery()
  * @method static Builder<static>|Manifest query()
@@ -32,6 +32,15 @@ class Manifest extends Model
 
     // disable touching timestamps
     public $timestamps = false;
+
+    protected function casts(): array
+    {
+        return [
+            'annotations' => 'array',
+            'created_at' => 'timestamp',
+            'updated_at' => 'timestamp',
+        ];
+    }
 
     public function getKeyName(): string
     {

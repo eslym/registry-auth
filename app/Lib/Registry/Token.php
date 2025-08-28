@@ -72,7 +72,7 @@ class Token
 
         $tokenData = static::issue($subject, [$grant], $ttlSeconds);
 
-        $ttl = $tokenData['ttl'];
+        $ttl = $tokenData['expires_in'];
 
         Cache::put($key, $tokenData['token'], $ttl - 10);
 

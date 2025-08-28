@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('blobs', function (Blueprint $table) {
             $table->string('digest')->primary();
             $table->unsignedBigInteger('size');
-
             $table->timestamps();
         });
     }

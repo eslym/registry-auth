@@ -1,19 +1,18 @@
 <?php
 
-namespace App\Models\Registry;
+namespace App\Models;
 
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Carbon;
 
 /**
  * @property string $repository
  * @property string $tag
  * @property string|null $reference
  * @property string $manifest_digest
- * @property Carbon|null $created_at
- * @property Carbon|null $updated_at
+ * @property int|null $created_at
+ * @property int|null $updated_at
  * @method static Builder<static>|RepositoryTag newModelQuery()
  * @method static Builder<static>|RepositoryTag newQuery()
  * @method static Builder<static>|RepositoryTag query()
@@ -21,6 +20,27 @@ use Illuminate\Support\Carbon;
  */
 class RepositoryTag extends Model
 {
+    protected $table = 'repository_tags';
+
+    public $timestamps = false;
+
+    protected $fillable = [
+        'repository',
+        'tag',
+        'reference',
+        'manifest_digest',
+        'created_at',
+        'updated_at',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'created_at' => 'timestamp',
+            'updated_at' => 'timestamp',
+        ];
+    }
+
     public function getKeyName(): string
     {
         return 'reference';

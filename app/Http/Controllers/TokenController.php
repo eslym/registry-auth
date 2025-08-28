@@ -63,6 +63,7 @@ class TokenController extends Controller
                         'user_id' => $user->id,
                         'expired_at' => $user->password_expired_at,
                         'is_refresh_token' => true,
+                        'last_used_at' => now(),
                         'last_used_ip' => $request->ip(),
                     ]);
                     AccessControl::create([

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\Registry;
+namespace App\Models;
 
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property string $name
  * @property string|null $description
- * @property string|null $prune_rules
+ * @property array<array-key, mixed>|null $prune_rules
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @method static Builder<static>|Repository newModelQuery()

@@ -25,7 +25,6 @@ return new class extends Migration
                 ->on('manifests')
                 ->onDelete('cascade');
             $table->timestamps();
-
             $table->primary(['repository', 'tag']);
         });
     }

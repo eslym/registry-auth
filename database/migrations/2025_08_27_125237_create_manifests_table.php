@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('media_type');
             $table->unsignedBigInteger('total_size')
                 ->nullable();
+            $table->json('annotations')
+                ->nullable();
             $table->timestamps();
         });
     }
