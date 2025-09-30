@@ -55,17 +55,9 @@
 	}
 </script>
 
-<div class={cn("flex flex-row", kelas)}>
-	<Button
-		variant="outline"
-		class="rounded-r-none border-r-0"
-		size="icon"
-		onclick={() => updateSort(field, dir === "asc" ? "desc" : "asc")}
-	>
-		<Icon />
-	</Button>
+<div class={cn("relative", kelas)}>
 	<Select.Root type="single" bind:value={() => field, noop}>
-		<Select.Trigger class="grow rounded-l-none border-l-0">
+		<Select.Trigger class="w-full pr-10">
 			{mapping[field]}
 		</Select.Trigger>
 		<Select.Content>
@@ -79,4 +71,12 @@
 			{/each}
 		</Select.Content>
 	</Select.Root>
+	<Button
+		variant="ghost"
+		class="absolute top-[1px] right-[1px] size-[calc(calc(var(--spacing)*9)-2px)] rounded-l-none"
+		size="icon"
+		onclick={() => updateSort(field, dir === "asc" ? "desc" : "asc")}
+	>
+		<Icon />
+	</Button>
 </div>
