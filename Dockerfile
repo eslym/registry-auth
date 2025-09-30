@@ -66,7 +66,7 @@ RUN sudo ln -s /usr/local/bin/bun /usr/local/bin/bunx &&\
     sudo apt install -y nodejs &&\
     rm -f /tmp/nodesource_setup.sh &&\
     useradd --shell /bin/bash --create-home --home-dir /home/eslym --uid 1000 -U eslym &&\
-    echo "eslym ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers &&\
+    echo "eslym ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 WORKDIR /home/eslym
 USER eslym

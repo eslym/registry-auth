@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 /**
@@ -13,6 +14,8 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * @property string|null $arch
  * @property string|null $platform
  * @property int $manifest_index
+ * @property-read Manifest|null $child
+ * @property-read Manifest|null $parent
  * @method static Builder<static>|ManifestManifest newModelQuery()
  * @method static Builder<static>|ManifestManifest newQuery()
  * @method static Builder<static>|ManifestManifest query()
@@ -32,4 +35,14 @@ class ManifestManifest extends Pivot
     ];
 
     public $timestamps = false;
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Manifest::class, 'parent_digest', 'digest');
+    }
+
+    public function child(): BelongsTo
+    {
+        return $this->belongsTo(Manifest::class, 'child_digest', 'digest');
+    }
 }

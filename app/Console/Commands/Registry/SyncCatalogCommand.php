@@ -5,15 +5,19 @@ namespace App\Console\Commands\Registry;
 use App\Lib\Registry\Token;
 use App\Models\Blob;
 use App\Models\Manifest;
+use App\Models\ManifestLayer;
+use App\Models\ManifestManifest;
 use App\Models\Repository;
+use App\Models\RepositoryLayer;
+use App\Models\RepositoryManifest;
 use App\Models\RepositoryTag;
 use Illuminate\Console\Command;
 use Illuminate\Http\Client\Factory;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use function Laravel\Prompts\confirm;
 
 class SyncCatalogCommand extends Command
@@ -42,8 +46,12 @@ class SyncCatalogCommand extends Command
             $this->info('Aborted.');
             return self::FAILURE;
         }
-        Repository::truncate();
         RepositoryTag::truncate();
+        RepositoryManifest::truncate();
+        RepositoryLayer::truncate();
+        Repository::truncate();
+        ManifestLayer::truncate();
+        ManifestManifest::truncate();
         Manifest::truncate();
         Blob::truncate();
         $this->syncCatalog();
@@ -71,11 +79,9 @@ class SyncCatalogCommand extends Command
             $response = $this->scope('registry:catalog:*')->get($next);
             $repo = $response->json('repositories', []);
             if (!empty($repo)) {
-                Repository::upsert(array_map(fn($name) => [
+                Repository::insert(array_map(fn($name) => [
                     'name' => $name,
-                    'is_synced' => true,
-                    'is_dangling' => false,
-                ], $repo), 'name', ['is_synced', 'is_dangling']);
+                ], $repo));
                 $this->info("Found repositories: " . join(', ', $repo));
                 foreach ($repo as $name) {
                     $this->syncTags($name);
@@ -88,17 +94,6 @@ class SyncCatalogCommand extends Command
                 $next = null;
             }
         } while ($next);
-
-        $n = Repository::where('is_synced', false)
-            ->update([
-                'is_synced' => true,
-                'is_dangling' => true,
-            ]);
-
-        if ($n > 0) {
-            $r = Str::plural('repository', $n);
-            $this->info("$n $r is missing from registry, marked as dangling.");
-        }
     }
 
     protected function syncTags(string $repo): void
@@ -111,24 +106,17 @@ class SyncCatalogCommand extends Command
             foreach ($tags as $tag) {
                 $this->info("Found tag: $repo:$tag");
                 $manifest = $this->syncManifest($repo, $tag);
+                $mtime = Carbon::createFromTimestamp($this->blobMTime($manifest->digest));
 
-                if (config('registry.storage.enabled')) {
-                    $mtime = Carbon::createFromTimestamp($this->blobMTime($manifest->digest));
-                } else {
-                    $mtime = now();
-                }
-
-                RepositoryTag::upsert([
+                RepositoryTag::create(
                     [
                         'repository' => $repo,
                         'tag' => $tag,
                         'manifest_digest' => $manifest->digest,
-                        'is_synced' => true,
-                        'is_dangling' => false,
                         'created_at' => $mtime,
                         'updated_at' => now(),
                     ]
-                ], ['repository', 'tag'], ['manifest_digest', 'is_synced', 'is_dangling', 'updated_at']);
+                );
             }
 
             $link = $response->header('Link');
@@ -138,29 +126,140 @@ class SyncCatalogCommand extends Command
                 $next = null;
             }
         } while ($next);
-
-        if (isset($repository)) {
-            $n = RepositoryTag::where('repository_id', $repository->id)
-                ->where('is_synced', false)
-                ->update([
-                    'is_synced' => true,
-                    'is_dangling' => true,
-                ]);
-
-            if ($n > 0) {
-                $r = Str::plural('tag', $n);
-                $this->info("$n $r of repository '$repo' is missing from registry, marked as dangling.");
-            }
-        }
     }
 
     protected function syncManifest(string $repo, string $reference): Manifest
     {
         $response = $this->scope("repository:$repo:pull")->get("/v2/$repo/manifests/$reference");
+        $digest = $response->header('Docker-Content-Digest');
+
+        $manifest = Manifest::find($digest);
+        if ($manifest) {
+            RepositoryManifest::upsert([
+                [
+                    'repository' => $repo,
+                    'digest' => $digest,
+                ]
+            ], ['repository', 'digest'], []);
+            $manifest->load(['layers', 'manifests']);
+
+            $subs = $manifest->layers->map(fn(ManifestLayer $l) => [
+                'repository' => $repo,
+                'digest' => $l->blob_digest,
+            ])->toArray();
+
+            $subs = array_merge($subs, $manifest->manifests->map(fn(ManifestManifest $m) => [
+                'repository' => $repo,
+                'digest' => $m->child_digest,
+            ])->toArray());
+
+            RepositoryManifest::upsert($subs, ['repository', 'digest'], ['digest']);
+
+            $layers = $manifest->layers->map(fn(ManifestLayer $l) => [
+                'repository' => $repo,
+                'digest' => $l->blob_digest,
+            ])->toArray();
+
+            RepositoryLayer::upsert($layers, ['repository', 'digest'], ['digest']);
+
+            return $manifest;
+        }
+
+        $type = $response->header('Content-Type');
+        $payload = $response->json();
+        $mtime = Carbon::createFromTimestamp($this->blobMTime($digest));
+
+        $manifest = Manifest::create([
+            'digest' => $digest,
+            'manifest_type' => $type,
+            'media_type' => Arr::get($payload, 'config.mediaType') ?? null,
+            'annotations' => $payload['annotations'] ?? null,
+            'created_at' => $mtime,
+            'updated_at' => now(),
+        ]);
+
+        Blob::upsert([
+            [
+                'digest' => $digest,
+                'size' => $response->header('Content-Length'),
+                'created_at' => $mtime,
+                'updated_at' => now(),
+            ]
+        ], ['digest'], ['size', 'updated_at']);
+
+        if (in_array($type, [
+            'application/vnd.docker.distribution.manifest.v2+json',
+            'application/vnd.oci.image.manifest.v1+json',
+        ])) {
+            $total = 0;
+
+            $blobs = [];
+            $layers = [];
+            $repoLayers = [];
+
+            foreach ($payload['layers'] as $index => $layer) {
+                $digest = $layer['digest'];
+                $mtime = Carbon::createFromTimestamp($this->blobMTime($digest));
+
+                $blobs[$digest] = [
+                    'digest' => $digest,
+                    'size' => $layer['size'],
+                    'created_at' => $mtime,
+                    'updated_at' => now(),
+                ];
+
+                $layers [] = [
+                    'manifest_digest' => $manifest->digest,
+                    'blob_digest' => $digest,
+                    'layer_index' => $index,
+                ];
+
+                $repoLayers [] = [
+                    'repository' => $repo,
+                    'digest' => $digest,
+                ];
+
+                $total += $layer['size'];
+            }
+
+            Blob::upsert(array_values($blobs), ['digest'], ['size', 'updated_at']);
+            ManifestLayer::insert($layers);
+            RepositoryLayer::upsert($repoLayers, ['repository', 'digest'], ['digest']);
+
+            $manifest->total_size = $total;
+            $manifest->save();
+        } elseif (in_array($type, [
+            'application/vnd.docker.distribution.manifest.list.v2+json',
+            'application/vnd.oci.image.index.v1+json',
+        ])) {
+            $total = 0;
+            $inserts = [];
+
+            foreach ($payload['manifests'] as $index => $subManifest) {
+                $sub = $this->syncManifest($repo, $subManifest['digest']);
+                $platform = $subManifest['platform'] ?? [];
+                $inserts [] = [
+                    'parent_digest' => $manifest->digest,
+                    'child_digest' => $sub->digest,
+                    'arch' => $platform['architecture'] ?? null,
+                    'os' => $platform['os'] ?? null,
+                    'manifest_index' => $index,
+                ];
+                $total += $sub->total_size;
+            }
+
+            ManifestManifest::insert($inserts);
+
+            $manifest->total_size = $total;
+            $manifest->save();
+        }
+
+        return $manifest;
     }
 
-    protected function blobMTime(string $digest): ?int
+    protected function blobMTime(string $digest): int
     {
+        if (!config('registry.storage.enabled')) return time();
         [$algo, $hash] = explode(':', $digest, 2);
         $dir = substr($hash, 0, 2);
         $path = "docker/registry/v2/blobs/$algo/$dir/$hash/data";
@@ -168,7 +267,8 @@ class SyncCatalogCommand extends Command
         if ($disk->exists($path)) {
             return $disk->lastModified($path);
         } else {
-            return null;
+            $this->warn('Blob not found in storage: ' . $path);
+            return time();
         }
     }
 }

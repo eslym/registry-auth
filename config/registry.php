@@ -48,5 +48,7 @@ return [
     'storage' => [
         'enabled' => (bool)env('REGISTRY_STORAGE_ENABLED', false),
         'disk' => 'registry-' . env('REGISTRY_STORAGE_DISK', 'local'),
+        // delete the blob when it is not referenced by any manifests after this many days
+        'blob_cleanup' => (int)env('REGISTRY_BLOB_CLEANUP', 7),
     ],
 ];
