@@ -1,7 +1,7 @@
 ARG FRANKENPHP_VERSION=1.9.0
 ARG PHP_VERSION=8.2.29
-ARG COMPOSER_VERSION=2.8.11
-ARG BUN_VERSION=1.2.21
+ARG COMPOSER_VERSION=2.8.12
+ARG BUN_VERSION=1.2.23
 ARG STACKER_VERSION=1.1.3
 
 FROM composer:${COMPOSER_VERSION} AS composer
@@ -53,23 +53,23 @@ RUN apt update &&\
                    jq \
                    procps \
                    psutils &&\
-    useradd --shell /bin/bash --create-home --home-dir /home/eslym --uid 1000 -U eslym &&\
-    echo "eslym ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers &&\
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 COPY --from=stacker /usr/local/bin/stacker /usr/local/bin/stacker
 
-WORKDIR /home/eslym
-USER eslym
-
 RUN sudo ln -s /usr/local/bin/bun /usr/local/bin/bunx &&\
     curl -fsSL https://deb.nodesource.com/setup_23.x -o /tmp/nodesource_setup.sh &&\
     sudo chmod +x /tmp/nodesource_setup.sh &&\
     sudo bash -E /tmp/nodesource_setup.sh &&\
     sudo apt install -y nodejs &&\
-    rm -f /tmp/nodesource_setup.sh
+    rm -f /tmp/nodesource_setup.sh &&\
+    useradd --shell /bin/bash --create-home --home-dir /home/eslym --uid 1000 -U eslym &&\
+    echo "eslym ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers &&\
+
+WORKDIR /home/eslym
+USER eslym
 
 CMD ["/bin/bash"]
 
