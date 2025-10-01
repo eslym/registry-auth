@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Lib\Registry\RegistryClient;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @property string $repository
@@ -43,6 +45,24 @@ class RepositoryTag extends Model
 
     public $incrementing = false;
 
+    protected bool $storageCleanup = false;
+
+    protected static function boot(): void
+    {
+        parent::boot();
+        static::deleted(function (self $tag) {
+            if (!$tag->storageCleanup) return;
+            if (config('registry.storage.enabled')) {
+                $disk = Storage::disk(config('registry.storage.disk'));
+                if ($disk->exists($tag->storage_path)) {
+                    $disk->delete($tag->storage_path);
+                }
+            } else {
+                RegistryClient::scope("repository:{$tag->repository}:*")->delete($tag->api_path);
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [
@@ -73,6 +93,11 @@ class RepositoryTag extends Model
     public function manifest(): BelongsTo
     {
         return $this->belongsTo(Manifest::class, 'manifest_digest', 'digest');
+    }
+
+    public function markCleanup(): void
+    {
+        $this->storageCleanup = true;
     }
 
     protected function storagePath(): Attribute

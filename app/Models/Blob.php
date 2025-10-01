@@ -45,6 +45,19 @@ class Blob extends Model
     // disable touching timestamps
     public $timestamps = false;
 
+    protected static function boot(): void
+    {
+        parent::boot();
+        if(config('registry.storage.enabled')) {
+            static::deleted(function (Blob $blob) {
+                $disk = Storage::disk(config('registry.storage.disk'));
+                if ($disk->exists($blob->storage_path)) {
+                    $disk->delete($blob->storage_path);
+                }
+            });
+        }
+    }
+
     protected function casts(): array
     {
         return [
@@ -92,11 +105,5 @@ class Blob extends Model
             ->where('created_at', '<', now()->subDays(config('registry.storage.blob_cleanup')))
             ->whereDoesntHave('layers')
             ->whereDoesntHave('manifest');
-    }
-
-    protected function pruning(): void
-    {
-        if (!config('registry.storage.enabled')) return;
-        Storage::disk(config('registry.storage.disk'))->deleteDirectory($this->storage_path);
     }
 }

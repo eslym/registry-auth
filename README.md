@@ -225,7 +225,7 @@ Stable CA enabled).
 - [x] ~~Stable CA for easier key rotation~~
 - [ ] Image management
   1. [x] ~~Sync catalog via command~~
-  2. [ ] Sync catalog via webhook
+  2. [x] ~~Sync catalog via webhook~~
   3. [ ] Web UI
   4. [ ] Garbage collection
 - [x] ~~Personal access tokens~~

@@ -5,6 +5,7 @@ use Illuminate\Support\Str;
 $host = env('REGISTRY_HOST', 'localhost:5000');
 $insecure = Str::startsWith($host, ['localhost', '127.']);
 
+/** @noinspection HttpUrlsUsage */
 return [
     // Allow anonymous access to the catalog endpoint
     'anonymous_catalog' => (bool)env('REGISTRY_ANONYMOUS_CATALOG', false),
@@ -50,5 +51,9 @@ return [
         'disk' => 'registry-' . env('REGISTRY_STORAGE_DISK', 'local'),
         // delete the blob when it is not referenced by any manifests after this many days
         'blob_cleanup' => (int)env('REGISTRY_BLOB_CLEANUP', 7),
+    ],
+
+    'webhook' => [
+        'token' => env('REGISTRY_WEBHOOK_TOKEN'),
     ],
 ];

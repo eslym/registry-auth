@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Lib\Registry\RegistryClient;
 use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * @property string $repository
@@ -31,6 +33,24 @@ class RepositoryManifest extends Pivot
         'digest',
     ];
 
+    protected bool $storageCleanup = false;
+
+    protected static function boot(): void
+    {
+        parent::boot();
+        static::deleted(function (self $manifest) {
+            if (!$manifest->storageCleanup) return;
+            if (config('registry.storage.enabled')) {
+                $disk = Storage::disk(config('registry.storage.disk'));
+                if ($disk->exists($manifest->storage_path)) {
+                    $disk->delete($manifest->storage_path);
+                }
+            } else {
+                RegistryClient::scope("repository:{$manifest->repository}:*")->delete($manifest->api_path);
+            }
+        });
+    }
+
     public function repo(): BelongsTo
     {
         return $this->belongsTo(Repository::class, 'repository', 'name');
@@ -39,6 +59,11 @@ class RepositoryManifest extends Pivot
     public function manifest(): BelongsTo
     {
         return $this->belongsTo(Manifest::class, 'digest', 'digest');
+    }
+
+    public function markCleanup(): void
+    {
+        $this->storageCleanup = true;
     }
 
     protected function storagePath(): Attribute

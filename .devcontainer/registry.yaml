@@ -28,3 +28,11 @@ auth:
     service: registry.local
     issuer: registry.local
     rootcertbundle: /home/eslym/registry-auth/storage/app/certs/root.crt
+
+notifications:
+  endpoints:
+    - name: registry-auth
+      url: http://app:8000/api/registry-events
+      timeout: 500ms
+      threshold: 5
+      backoff: 10s
