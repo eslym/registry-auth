@@ -10,14 +10,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
- * @property Repository|null $repository
+ * @property string $repository
  * @property string $tag
  * @property string|null $reference
  * @property string $manifest_digest
+ * @property Carbon|null $flagged_prune_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read string $api_path
  * @property-read Manifest|null $manifest
+ * @property-read Repository|null $repo
  * @property-read string $storage_path
  * @method static Builder<static>|RepositoryTag newModelQuery()
  * @method static Builder<static>|RepositoryTag newQuery()
@@ -44,6 +46,7 @@ class RepositoryTag extends Model
     protected function casts(): array
     {
         return [
+            'flagged_prune_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
@@ -62,7 +65,7 @@ class RepositoryTag extends Model
         return 'string';
     }
 
-    public function repository(): BelongsTo
+    public function repo(): BelongsTo
     {
         return $this->belongsTo(Repository::class, 'repository', 'name');
     }

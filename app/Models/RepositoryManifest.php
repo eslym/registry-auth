@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 /**
- * @property Repository|null $repository
+ * @property string $repository
  * @property string $digest
  * @property-read string $api_path
  * @property-read Manifest|null $manifest
+ * @property-read Repository|null $repo
  * @property-read string $storage_path
  * @method static Builder<static>|RepositoryManifest newModelQuery()
  * @method static Builder<static>|RepositoryManifest newQuery()
@@ -30,7 +31,7 @@ class RepositoryManifest extends Pivot
         'digest',
     ];
 
-    public function repository(): BelongsTo
+    public function repo(): BelongsTo
     {
         return $this->belongsTo(Repository::class, 'repository', 'name');
     }

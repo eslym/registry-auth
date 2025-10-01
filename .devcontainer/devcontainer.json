@@ -23,6 +23,7 @@
 		"jetbrains": {
 			"plugins": [
 				"intellij.javascript.bun",
+				"com.github.copilot",
 				"com.laravel_idea.plugin",
 				"dev.blachut.svelte.lang"
 			]

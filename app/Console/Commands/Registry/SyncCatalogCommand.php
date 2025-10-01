@@ -106,7 +106,7 @@ class SyncCatalogCommand extends Command
             foreach ($tags as $tag) {
                 $this->info("Found tag: $repo:$tag");
                 $manifest = $this->syncManifest($repo, $tag);
-                $mtime = Carbon::createFromTimestamp($this->blobMTime($manifest->digest));
+                $mtime = Carbon::createFromTimestamp($this->tagMTime($repo, $tag));
 
                 RepositoryTag::create(
                     [
@@ -234,6 +234,7 @@ class SyncCatalogCommand extends Command
         ])) {
             $total = 0;
             $inserts = [];
+            $manifests = [];
 
             foreach ($payload['manifests'] as $index => $subManifest) {
                 $sub = $this->syncManifest($repo, $subManifest['digest']);
@@ -245,10 +246,15 @@ class SyncCatalogCommand extends Command
                     'os' => $platform['os'] ?? null,
                     'manifest_index' => $index,
                 ];
+                $manifests [] = [
+                    'repository' => $repo,
+                    'digest' => $sub->digest,
+                ];
                 $total += $sub->total_size;
             }
 
             ManifestManifest::insert($inserts);
+            RepositoryManifest::upsert($manifests, ['repository', 'digest'], ['digest']);
 
             $manifest->total_size = $total;
             $manifest->save();
@@ -268,6 +274,19 @@ class SyncCatalogCommand extends Command
             return $disk->lastModified($path);
         } else {
             $this->warn('Blob not found in storage: ' . $path);
+            return time();
+        }
+    }
+
+    protected function tagMTime(string $repo, string $tag): int
+    {
+        if (!config('registry.storage.enabled')) return time();
+        $current = "docker/registry/v2/repositories/$repo/_manifests/tags/$tag/current/link";
+        $disk = Storage::disk(config('registry.storage.disk'));
+        if ($disk->exists($current)) {
+            return $disk->lastModified($current);
+        } else {
+            $this->warn('Tag not found in storage: ' . $current);
             return time();
         }
     }

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as Select from "@/shadcn/ui/select";
+	import * as Tooltip from "@/shadcn/ui/tooltip";
 	import { Button } from "@/shadcn/ui/button";
 	import { ArrowDownAZIcon, ArrowUpAZIcon } from "@lucide/svelte";
 	import type { ClassValue } from "svelte/elements";
@@ -57,9 +58,18 @@
 
 <div class={cn("relative", kelas)}>
 	<Select.Root type="single" bind:value={() => field, noop}>
-		<Select.Trigger class="w-full pr-10">
-			{mapping[field]}
-		</Select.Trigger>
+		<Tooltip.Provider>
+			<Tooltip.Root>
+				<Tooltip.Trigger>
+					{#snippet child({ props })}
+						<Select.Trigger {...props} class="w-full pr-10">
+							{mapping[field]}
+						</Select.Trigger>
+					{/snippet}
+				</Tooltip.Trigger>
+				<Tooltip.Content>Sorted By: {mapping[field]}</Tooltip.Content>
+			</Tooltip.Root>
+		</Tooltip.Provider>
 		<Select.Content>
 			{#each options as opt (opt.field)}
 				<Select.Item
@@ -71,12 +81,23 @@
 			{/each}
 		</Select.Content>
 	</Select.Root>
-	<Button
-		variant="ghost"
-		class="absolute top-[1px] right-[1px] size-[calc(calc(var(--spacing)*9)-2px)] rounded-l-none"
-		size="icon"
-		onclick={() => updateSort(field, dir === "asc" ? "desc" : "asc")}
-	>
-		<Icon />
-	</Button>
+	<Tooltip.Provider>
+		<Tooltip.Root>
+			<Tooltip.Trigger>
+				{#snippet child({ props })}
+					<Button
+						{...props}
+						variant="ghost"
+						class="absolute top-[1px] right-[1px] size-[calc(calc(var(--spacing)*9)-2px)] rounded-l-none"
+						size="icon"
+						onclick={() =>
+							updateSort(field, dir === "asc" ? "desc" : "asc")}
+					>
+						<Icon />
+					</Button>
+				{/snippet}
+			</Tooltip.Trigger>
+			<Tooltip.Content>Sort Direction ({dir})</Tooltip.Content>
+		</Tooltip.Root>
+	</Tooltip.Provider>
 </div>

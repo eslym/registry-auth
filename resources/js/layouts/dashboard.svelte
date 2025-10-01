@@ -135,9 +135,9 @@
 						<a
 							href="/login"
 							class={buttonVariants({
-									variant: "ghost",
-									size: "icon"
-								})}
+								variant: "ghost",
+								size: "icon"
+							})}
 							use:inertia.link
 						>
 							<span class="sr-only">Login</span>
