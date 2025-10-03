@@ -5,6 +5,15 @@ import { hydrate, mount } from "svelte";
 import BaseLayout from "@/layouts/base.svelte";
 
 (async function main() {
+	if (
+		!import.meta.env.DEV &&
+		"navigator" in window &&
+		"serviceWorker" in navigator
+	) {
+		navigator.serviceWorker
+			.register("/service-worker.js")
+			.then(() => console.log("Service worker registered"));
+	}
 	await createInertiaApp({
 		resolve: resolvePage,
 		setup({ el, App, props }) {
