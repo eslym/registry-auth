@@ -28,7 +28,7 @@ class ProfileController extends Controller
         }
 
         $tokens = FilterBuilder::make()
-            ->sortable(['created_at', 'expires_at', 'description', 'used_by' => 'last_used_ip', 'used_at' => 'last_used_at'])
+            ->sortable(['created_at', 'expired_at', 'description', 'used_by' => 'last_used_ip', 'used_at' => 'last_used_at'])
             ->sortBy('created_at', 'desc')
             ->withString('search', function (Builder $query, string $keyword) {
                 $des = $query->qualifyColumn('description');
