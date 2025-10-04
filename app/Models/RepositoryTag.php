@@ -7,6 +7,7 @@ use Eloquent;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -30,6 +31,8 @@ use Illuminate\Support\Facades\Storage;
  */
 class RepositoryTag extends Model
 {
+    use Prunable;
+
     protected $table = 'repository_tags';
 
     public $timestamps = false;
@@ -116,5 +119,11 @@ class RepositoryTag extends Model
             $tag = $attrs['tag'];
             return "/v2/{$repo}/manifests/{$tag}";
         });
+    }
+
+    public function prunable(): Builder
+    {
+        $threshold = now()->sub(config('registry.storage.blob_cleanup'));
+        return $this->where('flagged_prune_at', '<', $threshold);
     }
 }

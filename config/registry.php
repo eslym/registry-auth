@@ -49,11 +49,22 @@ return [
     'storage' => [
         'enabled' => (bool)env('REGISTRY_STORAGE_ENABLED', false),
         'disk' => 'registry-' . env('REGISTRY_STORAGE_DISK', 'local'),
-        // delete the blob when it is not referenced by any manifests after this many days
-        'blob_cleanup' => (int)env('REGISTRY_BLOB_CLEANUP', 7),
+
+        // delete blobs which are not referenced by any manifest for more than this duration
+        'blob_cleanup' => tap(new DateInterval(env('REGISTRY_BLOB_CLEANUP_THRESHOLD', 'P1W')), fn($i) => $i->invert = 0),
     ],
 
     'webhook' => [
         'token' => env('REGISTRY_WEBHOOK_TOKEN'),
+    ],
+
+    'prune' => [
+        'cron' => env('REGISTRY_PRUNE_CRON', '0 3 * * *'),
+
+        // prune untagged manifests that were created more than this duration ago
+        'untagged_threshold' => tap(new DateInterval(env('REGISTRY_PRUNE_UNTAGGED_THRESHOLD', 'PT4H')), fn($i) => $i->invert = 0),
+
+        // prune tags which flagged for deletion more than this many hours ago
+        'flagged_threshold' => tap(new DateInterval(env('REGISTRY_PRUNE_FLAGGED_THRESHOLD', 'PT1H')), fn($i) => $i->invert = 0),
     ],
 ];

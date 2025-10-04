@@ -12,7 +12,7 @@ Route::prefix('/api')->group(function () {
     Route::post('/token', [TokenController::class, 'byRefreshToken'])
         ->name('api.refresh_token');
 
-    Route::post('/registry-events', [WebhookController::class, 'events'])
+    Route::post('/registry-events', WebhookController::class)
         ->name('api.registry.webhook');
 });
 

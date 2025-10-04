@@ -48,7 +48,7 @@ class Blob extends Model
     protected static function boot(): void
     {
         parent::boot();
-        if(config('registry.storage.enabled')) {
+        if (config('registry.storage.enabled')) {
             static::deleted(function (Blob $blob) {
                 $disk = Storage::disk(config('registry.storage.disk'));
                 if ($disk->exists($blob->storage_path)) {
@@ -101,8 +101,9 @@ class Blob extends Model
 
     public function prunable(): Builder
     {
+        $threshold = now()->sub(config('registry.storage.blob_cleanup'));
         return $this
-            ->where('created_at', '<', now()->subDays(config('registry.storage.blob_cleanup')))
+            ->where('created_at', '<', $threshold)
             ->whereDoesntHave('layers')
             ->whereDoesntHave('manifest');
     }

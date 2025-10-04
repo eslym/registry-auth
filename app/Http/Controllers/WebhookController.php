@@ -23,7 +23,7 @@ class WebhookController extends Controller
     private array $manifests = [];
     private array $repoTags = [];
 
-    public function events(Request $request): Response
+    public function __invoke(Request $request): Response
     {
         $token = config('registry.webhook.token');
 
@@ -105,8 +105,14 @@ class WebhookController extends Controller
         $b_bytes = array_values(unpack('C*', $b));
         $same = 1;
         $len = max(count($a_bytes), count($b_bytes));
+        if (count($a_bytes) < $len) {
+            $a_bytes = array_pad($a_bytes, $len, -1);
+        }
+        if (count($b_bytes) < $len) {
+            $b_bytes = array_pad($b_bytes, $len, -1);
+        }
         for ($i = 0; $i < $len; $i++) {
-            $same &= isset($a_bytes[$i], $b_bytes[$i]) && $a_bytes[$i] === $b_bytes[$i];
+            $same &= $a_bytes[$i] === $b_bytes[$i];
         }
         return (bool)$same;
     }
